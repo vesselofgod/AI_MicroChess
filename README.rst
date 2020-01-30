@@ -124,7 +124,7 @@ AI와 게임 플레이
    python scripts/run_game.py --white=human --black=one_step_search
 
 .. _play_interface:
-.. figure:: figs/microchess-human.png
+.. figure:: docs/figs/microchess-human.png
    :figwidth: 200
 
    게임 플레이 인터페이스
