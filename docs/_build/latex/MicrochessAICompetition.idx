@@ -1,0 +1,195 @@
+\indexentry{scripts.chess\_board (모듈)|hyperpage}{39}
+\indexentry{ChessBoard (scripts.chess\_board 종류)|hyperpage}{39}
+\indexentry{block\_size (scripts.chess\_board.ChessBoard attribute)|hyperpage}{39}
+\indexentry{height (scripts.chess\_board.ChessBoard attribute)|hyperpage}{39}
+\indexentry{step() (scripts.chess\_board.ChessBoard method)|hyperpage}{39}
+\indexentry{width (scripts.chess\_board.ChessBoard attribute)|hyperpage}{40}
+\indexentry{micro\_to\_std (scripts.chess\_board 모듈)|hyperpage}{40}
+\indexentry{std\_to\_micro (scripts.chess\_board 모듈)|hyperpage}{40}
+\indexentry{scripts.run\_game (모듈)|hyperpage}{40}
+\indexentry{Environment (scripts.run\_game 종류)|hyperpage}{40}
+\indexentry{close() (scripts.run\_game.Environment method)|hyperpage}{40}
+\indexentry{render() (scripts.run\_game.Environment method)|hyperpage}{40}
+\indexentry{reset() (scripts.run\_game.Environment method)|hyperpage}{40}
+\indexentry{step() (scripts.run\_game.Environment method)|hyperpage}{40}
+\indexentry{Evaluator (scripts.run\_game 종류)|hyperpage}{41}
+\indexentry{eval() (scripts.run\_game.Evaluator static method)|hyperpage}{41}
+\indexentry{eval\_2() (scripts.run\_game.Evaluator static method)|hyperpage}{41}
+\indexentry{win\_or\_lose() (scripts.run\_game.Evaluator static method)|hyperpage}{41}
+\indexentry{Move (scripts.run\_game 종류)|hyperpage}{42}
+\indexentry{State (scripts.run\_game 종류)|hyperpage}{42}
+\indexentry{black\_remain\_sec (scripts.run\_game.State attribute)|hyperpage}{42}
+\indexentry{color (scripts.run\_game.State attribute)|hyperpage}{42}
+\indexentry{forward() (scripts.run\_game.State method)|hyperpage}{42}
+\indexentry{white\_remain\_sec (scripts.run\_game.State attribute)|hyperpage}{42}
+\indexentry{TIME\_LIMIT (scripts.run\_game 모듈)|hyperpage}{42}
+\indexentry{game() (scripts.run\_game 모듈)|hyperpage}{42}
+\indexentry{scripts.utils (모듈)|hyperpage}{42}
+\indexentry{ascii\_plot() (scripts.utils 모듈)|hyperpage}{42}
+\indexentry{scripts (모듈)|hyperpage}{44}
+\indexentry{agents (모듈)|hyperpage}{44}
+\indexentry{BaseAgent (agents 종류)|hyperpage}{44}
+\indexentry{act() (agents.BaseAgent method)|hyperpage}{44}
+\indexentry{close() (agents.BaseAgent method)|hyperpage}{44}
+\indexentry{opponent\_color (agents.BaseAgent attribute)|hyperpage}{44}
+\indexentry{reset() (agents.BaseAgent method)|hyperpage}{44}
+\indexentry{agents.basic.debug\_agent (모듈)|hyperpage}{44}
+\indexentry{FirstMoveAgent (agents.basic.debug\_agent 종류)|hyperpage}{44}
+\indexentry{act() (agents.basic.debug\_agent.FirstMoveAgent method)|hyperpage}{44}
+\indexentry{close() (agents.basic.debug\_agent.FirstMoveAgent method)|hyperpage}{45}
+\indexentry{reset() (agents.basic.debug\_agent.FirstMoveAgent method)|hyperpage}{45}
+\indexentry{MalfunctionAgent (agents.basic.debug\_agent 종류)|hyperpage}{45}
+\indexentry{act() (agents.basic.debug\_agent.MalfunctionAgent method)|hyperpage}{45}
+\indexentry{close() (agents.basic.debug\_agent.MalfunctionAgent method)|hyperpage}{45}
+\indexentry{reset() (agents.basic.debug\_agent.MalfunctionAgent method)|hyperpage}{45}
+\indexentry{agents.basic.human (모듈)|hyperpage}{45}
+\indexentry{Player (agents.basic.human 종류)|hyperpage}{45}
+\indexentry{act() (agents.basic.human.Player method)|hyperpage}{45}
+\indexentry{close() (agents.basic.human.Player method)|hyperpage}{45}
+\indexentry{reset() (agents.basic.human.Player method)|hyperpage}{45}
+\indexentry{agents.basic.random\_agent (모듈)|hyperpage}{46}
+\indexentry{RandomAgent (agents.basic.random\_agent 종류)|hyperpage}{46}
+\indexentry{act() (agents.basic.random\_agent.RandomAgent method)|hyperpage}{46}
+\indexentry{close() (agents.basic.random\_agent.RandomAgent method)|hyperpage}{46}
+\indexentry{reset() (agents.basic.random\_agent.RandomAgent method)|hyperpage}{46}
+\indexentry{agents.basic (모듈)|hyperpage}{46}
+\indexentry{agents.search (모듈)|hyperpage}{46}
+\indexentry{agents.search.one\_step\_search\_agent (모듈)|hyperpage}{46}
+\indexentry{OneStepSearchAgent (agents.search.one\_step\_search\_agent 종류)|hyperpage}{46}
+\indexentry{act() (agents.search.one\_step\_search\_agent.OneStepSearchAgent method)|hyperpage}{46}
+\indexentry{close() (agents.search.one\_step\_search\_agent.OneStepSearchAgent method)|hyperpage}{47}
+\indexentry{reset() (agents.search.one\_step\_search\_agent.OneStepSearchAgent method)|hyperpage}{47}
+\indexentry{agents.search.two\_step\_search\_agent (모듈)|hyperpage}{47}
+\indexentry{TwoStepSearchAgent (agents.search.two\_step\_search\_agent 종류)|hyperpage}{47}
+\indexentry{act() (agents.search.two\_step\_search\_agent.TwoStepSearchAgent method)|hyperpage}{47}
+\indexentry{close() (agents.search.two\_step\_search\_agent.TwoStepSearchAgent method)|hyperpage}{47}
+\indexentry{opponent\_act() (agents.search.two\_step\_search\_agent.TwoStepSearchAgent method)|hyperpage}{47}
+\indexentry{reset() (agents.search.two\_step\_search\_agent.TwoStepSearchAgent method)|hyperpage}{47}
+\indexentry{agents.search.negamax\_search\_agent (모듈)|hyperpage}{47}
+\indexentry{NegamaxSearchAgent (agents.search.negamax\_search\_agent 종류)|hyperpage}{47}
+\indexentry{act() (agents.search.negamax\_search\_agent.NegamaxSearchAgent method)|hyperpage}{48}
+\indexentry{close() (agents.search.negamax\_search\_agent.NegamaxSearchAgent method)|hyperpage}{48}
+\indexentry{negamax() (agents.search.negamax\_search\_agent.NegamaxSearchAgent method)|hyperpage}{48}
+\indexentry{reset() (agents.search.negamax\_search\_agent.NegamaxSearchAgent method)|hyperpage}{48}
+\indexentry{agents.search.abp\_negamax\_search\_agent (모듈)|hyperpage}{48}
+\indexentry{ABPNegamaxSearchAgent (agents.search.abp\_negamax\_search\_agent 종류)|hyperpage}{48}
+\indexentry{act() (agents.search.abp\_negamax\_search\_agent.ABPNegamaxSearchAgent method)|hyperpage}{48}
+\indexentry{close() (agents.search.abp\_negamax\_search\_agent.ABPNegamaxSearchAgent method)|hyperpage}{49}
+\indexentry{negamax() (agents.search.abp\_negamax\_search\_agent.ABPNegamaxSearchAgent method)|hyperpage}{49}
+\indexentry{reset() (agents.search.abp\_negamax\_search\_agent.ABPNegamaxSearchAgent method)|hyperpage}{49}
+\indexentry{agents.search.mcts\_agent (모듈)|hyperpage}{49}
+\indexentry{Arrow (agents.search.mcts\_agent 종류)|hyperpage}{49}
+\indexentry{MCTSAgent (agents.search.mcts\_agent 종류)|hyperpage}{49}
+\indexentry{act() (agents.search.mcts\_agent.MCTSAgent method)|hyperpage}{49}
+\indexentry{close() (agents.search.mcts\_agent.MCTSAgent method)|hyperpage}{49}
+\indexentry{max\_depth (agents.search.mcts\_agent.MCTSAgent attribute)|hyperpage}{49}
+\indexentry{n\_simulations (agents.search.mcts\_agent.MCTSAgent attribute)|hyperpage}{49}
+\indexentry{planner (agents.search.mcts\_agent.MCTSAgent attribute)|hyperpage}{49}
+\indexentry{reset() (agents.search.mcts\_agent.MCTSAgent method)|hyperpage}{49}
+\indexentry{search\_time (agents.search.mcts\_agent.MCTSAgent attribute)|hyperpage}{49}
+\indexentry{MCTSAgentDev (agents.search.mcts\_agent 종류)|hyperpage}{49}
+\indexentry{act() (agents.search.mcts\_agent.MCTSAgentDev method)|hyperpage}{49}
+\indexentry{close() (agents.search.mcts\_agent.MCTSAgentDev method)|hyperpage}{50}
+\indexentry{max\_depth (agents.search.mcts\_agent.MCTSAgentDev attribute)|hyperpage}{50}
+\indexentry{n\_simulations (agents.search.mcts\_agent.MCTSAgentDev attribute)|hyperpage}{50}
+\indexentry{planner (agents.search.mcts\_agent.MCTSAgentDev attribute)|hyperpage}{50}
+\indexentry{reset() (agents.search.mcts\_agent.MCTSAgentDev method)|hyperpage}{50}
+\indexentry{search\_time (agents.search.mcts\_agent.MCTSAgentDev attribute)|hyperpage}{50}
+\indexentry{MCTSPlanner (agents.search.mcts\_agent 종류)|hyperpage}{50}
+\indexentry{backup() (agents.search.mcts\_agent.MCTSPlanner method)|hyperpage}{50}
+\indexentry{best\_child() (agents.search.mcts\_agent.MCTSPlanner method)|hyperpage}{50}
+\indexentry{default\_policy() (agents.search.mcts\_agent.MCTSPlanner method)|hyperpage}{50}
+\indexentry{search() (agents.search.mcts\_agent.MCTSPlanner method)|hyperpage}{50}
+\indexentry{tree\_policy() (agents.search.mcts\_agent.MCTSPlanner method)|hyperpage}{50}
+\indexentry{Node (agents.search.mcts\_agent 종류)|hyperpage}{51}
+\indexentry{children (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{key (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{next\_turn (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{parent (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{state (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{turn (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{ucb (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{visits (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{wins (agents.search.mcts\_agent.Node attribute)|hyperpage}{51}
+\indexentry{agents.self\_learning (모듈)|hyperpage}{51}
+\indexentry{agents.self\_learning.agent (모듈)|hyperpage}{52}
+\indexentry{Agent (agents.self\_learning.agent 종류)|hyperpage}{52}
+\indexentry{act() (agents.self\_learning.agent.Agent method)|hyperpage}{52}
+\indexentry{alpha (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{close() (agents.self\_learning.agent.Agent method)|hyperpage}{52}
+\indexentry{cputc (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{epsilon (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{max\_depth (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{mirror (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{model (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{model\_cls (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{model\_file (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{n\_simulations (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{planner (agents.self\_learning.agent.Agent attribute)|hyperpage}{52}
+\indexentry{reset() (agents.self\_learning.agent.Agent method)|hyperpage}{52}
+\indexentry{set\_params() (agents.self\_learning.agent.Agent method)|hyperpage}{53}
+\indexentry{Sample (agents.self\_learning.agent 종류)|hyperpage}{53}
+\indexentry{done (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{legal\_moves (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{move (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{observation (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{pi (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{reward (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{state (agents.self\_learning.agent.Sample attribute)|hyperpage}{53}
+\indexentry{play\_game() (agents.self\_learning.agent 모듈)|hyperpage}{53}
+\indexentry{train() (agents.self\_learning.agent 모듈)|hyperpage}{54}
+\indexentry{agents.self\_learning.models (모듈)|hyperpage}{54}
+\indexentry{C64r6L1024r (agents.self\_learning.models 종류)|hyperpage}{54}
+\indexentry{forward() (agents.self\_learning.models.C64r6L1024r method)|hyperpage}{54}
+\indexentry{L1024r (agents.self\_learning.models 종류)|hyperpage}{54}
+\indexentry{forward() (agents.self\_learning.models.L1024r method)|hyperpage}{54}
+\indexentry{weights\_init() (agents.self\_learning.models 모듈)|hyperpage}{54}
+\indexentry{agents.self\_learning.memory (모듈)|hyperpage}{54}
+\indexentry{ReplayMemory (agents.self\_learning.memory 종류)|hyperpage}{54}
+\indexentry{add\_samples() (agents.self\_learning.memory.ReplayMemory method)|hyperpage}{54}
+\indexentry{capacity (agents.self\_learning.memory.ReplayMemory attribute)|hyperpage}{54}
+\indexentry{get\_dataset() (agents.self\_learning.memory.ReplayMemory method)|hyperpage}{54}
+\indexentry{pos (agents.self\_learning.memory.ReplayMemory attribute)|hyperpage}{55}
+\indexentry{size (agents.self\_learning.memory.ReplayMemory attribute)|hyperpage}{55}
+\indexentry{agents.self\_learning.mcts (모듈)|hyperpage}{55}
+\indexentry{MCTSPlanner (agents.self\_learning.mcts 종류)|hyperpage}{55}
+\indexentry{backup() (agents.self\_learning.mcts.MCTSPlanner method)|hyperpage}{55}
+\indexentry{best\_action() (agents.self\_learning.mcts.MCTSPlanner method)|hyperpage}{55}
+\indexentry{pi() (agents.self\_learning.mcts.MCTSPlanner method)|hyperpage}{55}
+\indexentry{predict() (agents.self\_learning.mcts.MCTSPlanner method)|hyperpage}{55}
+\indexentry{search() (agents.self\_learning.mcts.MCTSPlanner method)|hyperpage}{55}
+\indexentry{tree\_policy() (agents.self\_learning.mcts.MCTSPlanner method)|hyperpage}{56}
+\indexentry{Node (agents.self\_learning.mcts 종류)|hyperpage}{56}
+\indexentry{children (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{key (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{next\_turn (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{parent (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{print\_tree() (agents.self\_learning.mcts.Node method)|hyperpage}{56}
+\indexentry{prob (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{state (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{turn (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{ucb (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{visits (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{wins (agents.self\_learning.mcts.Node attribute)|hyperpage}{56}
+\indexentry{agents.self\_learning.utils (모듈)|hyperpage}{56}
+\indexentry{Buffer (agents.self\_learning.utils 종류)|hyperpage}{56}
+\indexentry{Operators (agents.self\_learning.utils 종류)|hyperpage}{57}
+\indexentry{lr() (agents.self\_learning.utils.Operators static method)|hyperpage}{57}
+\indexentry{n\_simulations() (agents.self\_learning.utils.Operators static method)|hyperpage}{57}
+\indexentry{Record (agents.self\_learning.utils 종류)|hyperpage}{57}
+\indexentry{decode\_move() (agents.self\_learning.utils 모듈)|hyperpage}{57}
+\indexentry{encode\_move() (agents.self\_learning.utils 모듈)|hyperpage}{57}
+\indexentry{encode\_observation() (agents.self\_learning.utils 모듈)|hyperpage}{57}
+\indexentry{get\_logger() (agents.self\_learning.utils 모듈)|hyperpage}{57}
+\indexentry{is\_castling() (agents.self\_learning.utils 모듈)|hyperpage}{57}
+\indexentry{make\_piece\_index() (agents.self\_learning.utils 모듈)|hyperpage}{58}
+\indexentry{agents.stockfish (모듈)|hyperpage}{58}
+\indexentry{agents.stockfish.agent (모듈)|hyperpage}{58}
+\indexentry{Stockfish (agents.stockfish.agent 종류)|hyperpage}{58}
+\indexentry{act() (agents.stockfish.agent.Stockfish method)|hyperpage}{58}
+\indexentry{available\_squares (agents.stockfish.agent.Stockfish attribute)|hyperpage}{58}
+\indexentry{close() (agents.stockfish.agent.Stockfish method)|hyperpage}{58}
+\indexentry{engine (agents.stockfish.agent.Stockfish attribute)|hyperpage}{58}
+\indexentry{engine\_path (agents.stockfish.agent.Stockfish attribute)|hyperpage}{58}
+\indexentry{level (agents.stockfish.agent.Stockfish attribute)|hyperpage}{58}
+\indexentry{reset() (agents.stockfish.agent.Stockfish method)|hyperpage}{58}

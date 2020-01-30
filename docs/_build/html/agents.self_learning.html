@@ -1,0 +1,836 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>agents.self_learning package &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="agents.stockfish package" href="agents.stockfish.html" />
+    <link rel="prev" title="agents.search package" href="agents.search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="agents.stockfish.html" title="agents.stockfish package"
+             accesskey="N">다음</a> |</li>
+        <li class="right" >
+          <a href="agents.search.html" title="agents.search package"
+             accesskey="P">이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="agents-self-learning-package">
+<h1>agents.self_learning package<a class="headerlink" href="#agents-self-learning-package" title="제목 주소">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="제목 주소">¶</a></h2>
+</div>
+<div class="section" id="module-agents.self_learning">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-agents.self_learning" title="제목 주소">¶</a></h2>
+<dl class="docutils">
+<dt>OBSERVATION_SHAPE:</dt>
+<dd><dl class="first docutils">
+<dt>12 channels: </dt>
+<dd>말 종류마다 하나의 채널을 사용 함(P, R, N, B, Q, K, p, r, n, b, q, k)
+백은 대문자, 흑은 소문자로 표시함</dd>
+<dt>5 rows:</dt>
+<dd>세로</dd>
+<dt>4 columns:</dt>
+<dd>가로</dd>
+</dl>
+<p class="last">특정 위치에 기물이 위치하면 1., 기물이 없으면 0.으로 표시</p>
+</dd>
+<dt>LEN_STATE</dt>
+<dd>지금이 백의 차례인가?, 흑의 차례인가? , 
+현재 플레이어에게 castling 권리가 있는가?, 다음 플레이어에게 castling 권리가 있는가?
+정보를 1., 과 0.로 표시</dd>
+<dt>N_ACTIONS</dt>
+<dd>가능한 모든 행동의 개수, 실제 기물의 존재 여부와 관계없이 
+가능한 모든 출발 지점 20개와 목표 지점 20개를 곱한 400개를 가능한 모든 행동으로 함</dd>
+</dl>
+</div>
+<div class="section" id="module-agents.self_learning.agent">
+<span id="agents-self-learning-agent-module"></span><h2>agents.self_learning.agent module<a class="headerlink" href="#module-agents.self_learning.agent" title="제목 주소">¶</a></h2>
+<p>Self Learning AI</p>
+<dl class="class">
+<dt id="agents.self_learning.agent.Agent">
+<em class="property">class </em><code class="descclassname">agents.self_learning.agent.</code><code class="descname">Agent</code><span class="sig-paren">(</span><em>name</em>, <em>color</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#Agent"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.Agent" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agents.html#agents.BaseAgent" title="agents.BaseAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">agents.BaseAgent</span></code></a></p>
+<p>Self Learning AI</p>
+<p>초기 속성은 eval 모드에서 사용할 값으로 설정되어 있음</p>
+<dl class="method">
+<dt id="agents.self_learning.agent.Agent.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>state</em>, <em>include_pi=False</em>, <em>tau=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#Agent.act"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.Agent.act" title="정의 주소">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> (<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><em>scripts.run_game.State</em></a>) -- 현재 게임 상태</li>
+<li><strong>include_pi</strong> (<em>bool</em>) -- 다음 수와 pi를 같이 반환할지 여부
+True일 때는 pi를 같이 반환함</li>
+<li><strong>tau</strong> (<em>int</em>) -- 몇 번째 수 까지 탐색을 할 것인지 [0, n]
+0 일 때는 탐색을 하지 않음 (평가, 테스트)
+0 이상일 때는 정해진 확률에 따라 무작위로 다음 수를 선택함 (학습)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last"><p>(int, np.array[1, 400]) -- move, pi</p>
+<ul class="simple">
+<li>move: [0, 399] 사이의 정수, 탐색을 하지 않는다면, 가장 pi값이 높은 행동을 선택함</li>
+<li>pi: 1 x 400 실수 행렬, 모든 행동에 대한 MCTS의 탐색 빈도를 정규화</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.alpha">
+<code class="descname">alpha</code><em class="property"> = 1.0</em><a class="headerlink" href="#agents.self_learning.agent.Agent.alpha" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.agent.Agent.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#Agent.close"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.Agent.close" title="정의 주소">¶</a></dt>
+<dd><p>AI 종료
+마지막에 한 번 실행</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.cputc">
+<code class="descname">cputc</code><em class="property"> = 1.0</em><a class="headerlink" href="#agents.self_learning.agent.Agent.cputc" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.epsilon">
+<code class="descname">epsilon</code><em class="property"> = -1.0</em><a class="headerlink" href="#agents.self_learning.agent.Agent.epsilon" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.max_depth">
+<code class="descname">max_depth</code><em class="property"> = 32</em><a class="headerlink" href="#agents.self_learning.agent.Agent.max_depth" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.mirror">
+<code class="descname">mirror</code><em class="property"> = True</em><a class="headerlink" href="#agents.self_learning.agent.Agent.mirror" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.model">
+<code class="descname">model</code><em class="property"> = None</em><a class="headerlink" href="#agents.self_learning.agent.Agent.model" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.model_cls">
+<code class="descname">model_cls</code><a class="headerlink" href="#agents.self_learning.agent.Agent.model_cls" title="정의 주소">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#agents.self_learning.models.C64r6L1024r" title="agents.self_learning.models.C64r6L1024r"><code class="xref py py-class docutils literal notranslate"><span class="pre">agents.self_learning.models.C64r6L1024r</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.model_file">
+<code class="descname">model_file</code><em class="property"> = 'models/C64r6L1024r/v1/best.pt'</em><a class="headerlink" href="#agents.self_learning.agent.Agent.model_file" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.n_simulations">
+<code class="descname">n_simulations</code><em class="property"> = 100000</em><a class="headerlink" href="#agents.self_learning.agent.Agent.n_simulations" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Agent.planner">
+<code class="descname">planner</code><em class="property"> = None</em><a class="headerlink" href="#agents.self_learning.agent.Agent.planner" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.agent.Agent.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>load_model=True</em>, <em>visualize_tree=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#Agent.reset"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.Agent.reset" title="정의 주소">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first last simple">
+<li><strong>load_model</strong> (<em>bool</em>) -- 학습한 모델을 로드할 지 여부, 학습할 때는 False 로 하고,
+평가할 때는 기본 값 True 사용함</li>
+<li><strong>visualize_tree</strong> (<em>bool</em>) -- MCTS 시각화 기능을 사용하는지 여부, 학습할 때는 False, 평가할 때는 True</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.agent.Agent.set_params">
+<code class="descname">set_params</code><span class="sig-paren">(</span><em>model</em>, <em>max_depth</em>, <em>n_simulations</em>, <em>cputc</em>, <em>epsilon</em>, <em>alpha</em>, <em>mirror</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#Agent.set_params"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.Agent.set_params" title="정의 주소">¶</a></dt>
+<dd><p>AI의 초기화 작업은 reset 에서 실행하지만, 편의 목적으로 일부 값은 set_params 에서 설정함
+set_params 는 reset 이전에 호출되어야 함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>torch.nn</em>) -- 인공신경망(policy + value net)</li>
+<li><strong>max_depth</strong> (<em>int</em>) -- MCTS 최대 탐색 깊이</li>
+<li><strong>n_simulations</strong> (<em>int</em>) -- MCTS 시뮬레이션 횟수</li>
+<li><strong>cputc</strong> (<em>float</em>) -- MCTS, UCB 공식에서 U의 가중치 c (cU+Q)S</li>
+<li><strong>epsilon</strong> (<em>float</em>) -- MCTS, UCB 공식에서 탐색 가중치</li>
+<li><strong>alpha</strong> (<em>float</em>) -- MCTS, UCB 공식에서 활용 가중치</li>
+<li><strong>mirror</strong> (<em>bool</em>) -- True일 때는 학습 AI가 흑과 백의 데이터를 모두 학습에 사용함
+현재 자신과 다른 색깔일때는 판을 180도 회전하여 학습 데이터로 사용</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agents.self_learning.agent.Sample">
+<em class="property">class </em><code class="descclassname">agents.self_learning.agent.</code><code class="descname">Sample</code><span class="sig-paren">(</span><em>observation</em>, <em>state</em>, <em>move</em>, <em>pi</em>, <em>reward</em>, <em>done</em>, <em>legal_moves</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#Sample"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.Sample" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>데이터 샘플 저장 용</p>
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.done">
+<code class="descname">done</code><a class="headerlink" href="#agents.self_learning.agent.Sample.done" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.legal_moves">
+<code class="descname">legal_moves</code><a class="headerlink" href="#agents.self_learning.agent.Sample.legal_moves" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.move">
+<code class="descname">move</code><a class="headerlink" href="#agents.self_learning.agent.Sample.move" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.observation">
+<code class="descname">observation</code><a class="headerlink" href="#agents.self_learning.agent.Sample.observation" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.pi">
+<code class="descname">pi</code><a class="headerlink" href="#agents.self_learning.agent.Sample.pi" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.reward">
+<code class="descname">reward</code><a class="headerlink" href="#agents.self_learning.agent.Sample.reward" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.agent.Sample.state">
+<code class="descname">state</code><a class="headerlink" href="#agents.self_learning.agent.Sample.state" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.agent.play_game">
+<code class="descclassname">agents.self_learning.agent.</code><code class="descname">play_game</code><span class="sig-paren">(</span><em>inqueue</em>, <em>outqueue</em>, <em>seed</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#play_game"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.play_game" title="정의 주소">¶</a></dt>
+<dd><p>종료되지 않고 무한 루프로 실행,
+inqueue 에서 다음 인자를 받아서, outqueue로 반환</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first last simple">
+<li><strong>inqueue</strong> -- <ul>
+<li>(Agent) -- white, white AI</li>
+<li>(Agent) -- black, black AI</li>
+<li>(float) -- turns_until_tau0, 탐색 횟수 (tau)</li>
+<li>(int) -- max_turn, 최대 턴 (default: 80)</li>
+<li>(bool) -- mirror</li>
+<li>(bool) -- reversed_reward, 학습 AI가 black 일 때 True 설정</li>
+</ul>
+</li>
+<li><strong>outqueue</strong> -- <ul>
+<li>(float) -- reward</li>
+<li>(bool) -- turn</li>
+<li>(list) -- short_term_memory</li>
+</ul>
+</li>
+<li><strong>seed</strong> (<em>int</em>) -- worker 를 이 seed 값으로 초기화, worker 는 모두 다른 seed 값으로 초기화 해야 함</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.agent.train">
+<code class="descclassname">agents.self_learning.agent.</code><code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/agent.html#train"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.agent.train" title="정의 주소">¶</a></dt>
+<dd><p>모델 학습 함수</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-agents.self_learning.models">
+<span id="agents-self-learning-models-module"></span><h2>agents.self_learning.models module<a class="headerlink" href="#module-agents.self_learning.models" title="제목 주소">¶</a></h2>
+<p>Self Learning AI 가 사용할 수 있는 인공신경망</p>
+<dl class="class">
+<dt id="agents.self_learning.models.C64r6L1024r">
+<em class="property">class </em><code class="descclassname">agents.self_learning.models.</code><code class="descname">C64r6L1024r</code><span class="sig-paren">(</span><em>observation_shape</em>, <em>len_state</em>, <em>n_actions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/models.html#C64r6L1024r"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.models.C64r6L1024r" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>CNN 6층 + MLP 1층 구조</p>
+<dl class="method">
+<dt id="agents.self_learning.models.C64r6L1024r.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>observations</em>, <em>states</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/models.html#C64r6L1024r.forward"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.models.C64r6L1024r.forward" title="정의 주소">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overriden by all subclasses.</p>
+<div class="admonition note">
+<p class="first admonition-title">주석</p>
+<p class="last">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agents.self_learning.models.L1024r">
+<em class="property">class </em><code class="descclassname">agents.self_learning.models.</code><code class="descname">L1024r</code><span class="sig-paren">(</span><em>observation_shape</em>, <em>len_state</em>, <em>n_actions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/models.html#L1024r"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.models.L1024r" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>1024개의 은닉노드를 가진 간단한 MLP</p>
+<dl class="method">
+<dt id="agents.self_learning.models.L1024r.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>observations</em>, <em>states</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/models.html#L1024r.forward"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.models.L1024r.forward" title="정의 주소">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overriden by all subclasses.</p>
+<div class="admonition note">
+<p class="first admonition-title">주석</p>
+<p class="last">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.models.weights_init">
+<code class="descclassname">agents.self_learning.models.</code><code class="descname">weights_init</code><span class="sig-paren">(</span><em>m</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/models.html#weights_init"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.models.weights_init" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-agents.self_learning.memory">
+<span id="agents-self-learning-memory-module"></span><h2>agents.self_learning.memory module<a class="headerlink" href="#module-agents.self_learning.memory" title="제목 주소">¶</a></h2>
+<p>Replay Memory</p>
+<dl class="class">
+<dt id="agents.self_learning.memory.ReplayMemory">
+<em class="property">class </em><code class="descclassname">agents.self_learning.memory.</code><code class="descname">ReplayMemory</code><span class="sig-paren">(</span><em>capacity</em>, <em>memory_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/memory.html#ReplayMemory"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.memory.ReplayMemory" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>게임 플레이 데이터를 저장하는 용도</p>
+<dl class="method">
+<dt id="agents.self_learning.memory.ReplayMemory.add_samples">
+<code class="descname">add_samples</code><span class="sig-paren">(</span><em>samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/memory.html#ReplayMemory.add_samples"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.memory.ReplayMemory.add_samples" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.memory.ReplayMemory.capacity">
+<code class="descname">capacity</code><a class="headerlink" href="#agents.self_learning.memory.ReplayMemory.capacity" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.memory.ReplayMemory.get_dataset">
+<code class="descname">get_dataset</code><span class="sig-paren">(</span><em>train_set_size</em>, <em>validation_set_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/memory.html#ReplayMemory.get_dataset"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.memory.ReplayMemory.get_dataset" title="정의 주소">¶</a></dt>
+<dd><p>학습 데이터와, 검증 데이터의 개수를 입력함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>train_set_size</strong> (<em>int</em>) -- 학습 데이터 개수</li>
+<li><strong>validation_set_size</strong> (<em>int</em>) -- 검증 데이터 개수</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(torch.Tensor, torch.Tensor) -- train_set, validation_set
+- train_set: 학습 데이터 세트
+- validation_set: 검증 데이터 세트</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.memory.ReplayMemory.pos">
+<code class="descname">pos</code><a class="headerlink" href="#agents.self_learning.memory.ReplayMemory.pos" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.memory.ReplayMemory.size">
+<code class="descname">size</code><a class="headerlink" href="#agents.self_learning.memory.ReplayMemory.size" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-agents.self_learning.mcts">
+<span id="agents-self-learning-mcts-module"></span><h2>agents.self_learning.mcts module<a class="headerlink" href="#module-agents.self_learning.mcts" title="제목 주소">¶</a></h2>
+<p>Self Learning용 Monte Carlo Tree Search 구현</p>
+<dl class="class">
+<dt id="agents.self_learning.mcts.MCTSPlanner">
+<em class="property">class </em><code class="descclassname">agents.self_learning.mcts.</code><code class="descname">MCTSPlanner</code><span class="sig-paren">(</span><em>turn</em>, <em>max_depth=9223372036854775807</em>, <em>action_score='visits'</em>, <em>cputc=1.0</em>, <em>epsilon=0.2</em>, <em>alpha=0.8</em>, <em>model=None</em>, <em>mirror=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>MCTS 알고리즘 구현</p>
+<dl class="method">
+<dt id="agents.self_learning.mcts.MCTSPlanner.backup">
+<code class="descname">backup</code><span class="sig-paren">(</span><em>node</em>, <em>delta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner.backup"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner.backup" title="정의 주소">¶</a></dt>
+<dd><p>시뮬레이션 결과 업데이트
+턴마다 Negamax 스타일로 보상의 부호를 바꿈,
+보상구간 [-1, 1]을 가정함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="#agents.self_learning.mcts.Node" title="agents.self_learning.mcts.Node"><em>agents.self_learning.mcts.Node</em></a>) -- 탐색한 트리의 종단노드</li>
+<li><strong>delta</strong> (<em>float</em>) -- 시뮬레이션으로 알아낸 보상</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.mcts.MCTSPlanner.best_action">
+<code class="descname">best_action</code><span class="sig-paren">(</span><em>node</em>, <em>deterministic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner.best_action"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner.best_action" title="정의 주소">¶</a></dt>
+<dd><p>현재 노드에서 가장 좋은 행동을 결정하여 반환함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> (<a class="reference internal" href="#agents.self_learning.mcts.Node" title="agents.self_learning.mcts.Node"><em>agents.self_learning.mcts.Node</em></a>) -- 현재 상태 노드 v0</li>
+<li><strong>deterministic</strong> (<em>bool</em>) -- 결정적으로 행동을 선택(True)할 것인지 확률적으로 선택(False)할 것인지 여부</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(chess.Move) -- 가장 좋은 행동</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.mcts.MCTSPlanner.pi">
+<code class="descname">pi</code><span class="sig-paren">(</span><em>node</em>, <em>tau</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner.pi"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner.pi" title="정의 주소">¶</a></dt>
+<dd><p>현재 상태 노드에서 pi 값을 계산함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> (<a class="reference internal" href="#agents.self_learning.mcts.Node" title="agents.self_learning.mcts.Node"><em>agents.self_learning.mcts.Node</em></a>) -- </li>
+<li><strong>tau</strong> (<em>int</em>) -- </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(torch.Tensor[400]) -- 현재 노드에서 시뮬레이션 했던 모든 행동들을 확률 값으로 변환함</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.mcts.MCTSPlanner.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>board_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner.predict"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner.predict" title="정의 주소">¶</a></dt>
+<dd><p>인공신경망을 이용해 현재 상태에서 가능한 수들의 선택 확률과 가치를 예측함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><strong>board_state</strong> (<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- </td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body">(torch.Tensor, torch.Tensor) -- move_prob, value
+- move_prob: torch.Tensor, 가능한 수들의 선택 확률
+- value: torch.Tensor, 현재 상태의 가치</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.mcts.MCTSPlanner.search">
+<code class="descname">search</code><span class="sig-paren">(</span><em>state</em>, <em>n_simulations=1000</em>, <em>tau=0.0</em>, <em>timeout=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner.search"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner.search" title="정의 주소">¶</a></dt>
+<dd><p>주어진 상태와 제약조건(시뮬레이션 횟수와 시간제한)동안 시뮬레이션을 하고
+찾아낸 가장 좋은 수을 반환함</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> (<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- 현재 게임 상태</li>
+<li><strong>n_simulations</strong> (<em>int</em>) -- 최대 시뮬레이션 횟수</li>
+<li><strong>tau</strong> (<em>int</em>) -- </li>
+<li><strong>timeout</strong> (<em>int</em>) -- 시간제한 (sec.)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(chess.Move) -- 가장 좋은 수</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.mcts.MCTSPlanner.tree_policy">
+<code class="descname">tree_policy</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#MCTSPlanner.tree_policy"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.MCTSPlanner.tree_policy" title="정의 주소">¶</a></dt>
+<dd><p>선택 및 확장 단계</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="#agents.self_learning.mcts.Node" title="agents.self_learning.mcts.Node"><em>agents.self_learning.mcts.Node</em></a>) -- 현재 노드 v0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body">(Node) -- 생성한 트리의 종단노드 vl</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agents.self_learning.mcts.Node">
+<em class="property">class </em><code class="descclassname">agents.self_learning.mcts.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>turn</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#Node"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.Node" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>상태공간 노드</p>
+<p>Attrs:</p>
+<ul class="simple">
+<li>(bool) -- turn, white=True, black=False</li>
+<li>(<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.run_game.State</span></code></a>) -- state</li>
+<li>(<a class="reference internal" href="#agents.self_learning.mcts.Node" title="agents.self_learning.mcts.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">agents.self_learning.mcts.Node</span></code></a>) -- parent, 이전 상태를 저장하고 있는 노드</li>
+<li>(dict) -- children, dict(key-&gt; chess.Move, value-&gt; Node), 특정 수를 두고 난 뒤의 상태</li>
+<li>(int) -- visits, 이 노드를 방문한 횟수</li>
+<li>(float) -- wins, 이 노드와 자식 노드에서 받은 보상의 총합</li>
+<li>(float) -- ucb, 이 노드의 ucb 값</li>
+</ul>
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.children">
+<code class="descname">children</code><a class="headerlink" href="#agents.self_learning.mcts.Node.children" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.key">
+<code class="descname">key</code><a class="headerlink" href="#agents.self_learning.mcts.Node.key" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.next_turn">
+<code class="descname">next_turn</code><a class="headerlink" href="#agents.self_learning.mcts.Node.next_turn" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.parent">
+<code class="descname">parent</code><a class="headerlink" href="#agents.self_learning.mcts.Node.parent" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agents.self_learning.mcts.Node.print_tree">
+<code class="descname">print_tree</code><span class="sig-paren">(</span><em>move=None</em>, <em>depth=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/mcts.html#Node.print_tree"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.mcts.Node.print_tree" title="정의 주소">¶</a></dt>
+<dd><p>콘솔에 트리 출력</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.prob">
+<code class="descname">prob</code><a class="headerlink" href="#agents.self_learning.mcts.Node.prob" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.state">
+<code class="descname">state</code><a class="headerlink" href="#agents.self_learning.mcts.Node.state" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.turn">
+<code class="descname">turn</code><a class="headerlink" href="#agents.self_learning.mcts.Node.turn" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.ucb">
+<code class="descname">ucb</code><a class="headerlink" href="#agents.self_learning.mcts.Node.ucb" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.visits">
+<code class="descname">visits</code><a class="headerlink" href="#agents.self_learning.mcts.Node.visits" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.self_learning.mcts.Node.wins">
+<code class="descname">wins</code><a class="headerlink" href="#agents.self_learning.mcts.Node.wins" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-agents.self_learning.utils">
+<span id="agents-self-learning-utils-module"></span><h2>agents.self_learning.utils module<a class="headerlink" href="#module-agents.self_learning.utils" title="제목 주소">¶</a></h2>
+<p>Self Learning AI에 필요한 기타 파일</p>
+<dl class="class">
+<dt id="agents.self_learning.utils.Buffer">
+<em class="property">class </em><code class="descclassname">agents.self_learning.utils.</code><code class="descname">Buffer</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#Buffer"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.Buffer" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>학습에 필요한 메모리 공간을 미리 할당해두고 재사용하기 위해 사용</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="agents.self_learning.utils.Operators">
+<em class="property">class </em><code class="descclassname">agents.self_learning.utils.</code><code class="descname">Operators</code><a class="reference internal" href="_modules/agents/self_learning/utils.html#Operators"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.Operators" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>학습 도중 실험 조건을 변경하기 위해 사용</p>
+<dl class="staticmethod">
+<dt id="agents.self_learning.utils.Operators.lr">
+<em class="property">static </em><code class="descname">lr</code><span class="sig-paren">(</span><em>log</em>, <em>current_model</em>, <em>best_model</em>, <em>arguments=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#Operators.lr"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.Operators.lr" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="agents.self_learning.utils.Operators.n_simulations">
+<em class="property">static </em><code class="descname">n_simulations</code><span class="sig-paren">(</span><em>log</em>, <em>current_model</em>, <em>best_model</em>, <em>arguments=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#Operators.n_simulations"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.Operators.n_simulations" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agents.self_learning.utils.Record">
+<em class="property">class </em><code class="descclassname">agents.self_learning.utils.</code><code class="descname">Record</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#Record"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.Record" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>학습 동안에 저장되는 데이터를 모아두는 객체</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.utils.decode_move">
+<code class="descclassname">agents.self_learning.utils.</code><code class="descname">decode_move</code><span class="sig-paren">(</span><em>board</em>, <em>move_code</em>, <em>turn</em>, <em>mirror</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#decode_move"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.decode_move" title="정의 주소">¶</a></dt>
+<dd><p>[0, 399] 정수로 된 수를 chess.Move로 변환, encode_move의 반대</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>board</strong> (<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- </li>
+<li><strong>move_code</strong> (<em>chess.Move</em>) -- </li>
+<li><strong>turn</strong> (<em>bool</em>) -- </li>
+<li><strong>mirror</strong> (<em>bool</em>) -- </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(chess.Move) --</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.utils.encode_move">
+<code class="descclassname">agents.self_learning.utils.</code><code class="descname">encode_move</code><span class="sig-paren">(</span><em>move</em>, <em>turn</em>, <em>mirror</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#encode_move"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.encode_move" title="정의 주소">¶</a></dt>
+<dd><p>chess.Move를 [0, 399] 정수로 변환, decode_move의 반대</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>move</strong> (<em>chess.Move</em>) -- </li>
+<li><strong>turn</strong> (<em>bool</em>) -- white=True, black=False</li>
+<li><strong>mirror</strong> (<em>bool</em>) -- </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(int) -- 정수 [0, 399] 범위</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.utils.encode_observation">
+<code class="descclassname">agents.self_learning.utils.</code><code class="descname">encode_observation</code><span class="sig-paren">(</span><em>state</em>, <em>turn</em>, <em>mirror</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#encode_observation"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.encode_observation" title="정의 주소">¶</a></dt>
+<dd><p>fen 표기법으로 된 보드 상태를 입력받아서, numpy array 형태로 변환
+각 채널은 특정 말에 대응되며, 해당 말이 존재하는 위치에 1.로 표시
+나머지 공간은 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> (<em>str</em>) -- fen 표기법</li>
+<li><strong>turn</strong> (<em>bool</em>) -- white=True, black=False</li>
+<li><strong>mirror</strong> (<em>bool</em>) -- 미러 옵션 사용여부</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(torch.Tensor[6x8x8]) -- 게임 상태를 tensor로 변환</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.utils.get_logger">
+<code class="descclassname">agents.self_learning.utils.</code><code class="descname">get_logger</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#get_logger"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.get_logger" title="정의 주소">¶</a></dt>
+<dd><p>로거 반환</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">반환:</th><td class="field-body">(logging.logger) --</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.utils.is_castling">
+<code class="descclassname">agents.self_learning.utils.</code><code class="descname">is_castling</code><span class="sig-paren">(</span><em>state</em>, <em>turn</em>, <em>mirror=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#is_castling"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.is_castling" title="정의 주소">¶</a></dt>
+<dd><p>castling 가능 여부 검사하여 실수 list로 반환, 게임 상태로 사용</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> (<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- </li>
+<li><strong>turn</strong> (<em>bool</em>) -- </li>
+<li><strong>mirror</strong> (<em>bool</em>) -- </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">([float, float]) -- 길이 2</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="agents.self_learning.utils.make_piece_index">
+<code class="descclassname">agents.self_learning.utils.</code><code class="descname">make_piece_index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/self_learning/utils.html#make_piece_index"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.self_learning.utils.make_piece_index" title="정의 주소">¶</a></dt>
+<dd><p>알파벳으로 표시된 체스 기물을 정수로 변환하는 dict를 반환</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">반환:</th><td class="field-body">(dict) -</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">목차</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">agents.self_learning package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-agents.self_learning">Module contents</a></li>
+<li><a class="reference internal" href="#module-agents.self_learning.agent">agents.self_learning.agent module</a></li>
+<li><a class="reference internal" href="#module-agents.self_learning.models">agents.self_learning.models module</a></li>
+<li><a class="reference internal" href="#module-agents.self_learning.memory">agents.self_learning.memory module</a></li>
+<li><a class="reference internal" href="#module-agents.self_learning.mcts">agents.self_learning.mcts module</a></li>
+<li><a class="reference internal" href="#module-agents.self_learning.utils">agents.self_learning.utils module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>이전 항목</h4>
+  <p class="topless"><a href="agents.search.html"
+                        title="이전 장">agents.search package</a></p>
+  <h4>다음 항목</h4>
+  <p class="topless"><a href="agents.stockfish.html"
+                        title="다음 장">agents.stockfish package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>현재 문서</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/agents.self_learning.rst.txt"
+            rel="nofollow">소스 코드를 보려면</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="agents.stockfish.html" title="agents.stockfish package"
+             >다음</a> |</li>
+        <li class="right" >
+          <a href="agents.search.html" title="agents.search package"
+             >이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

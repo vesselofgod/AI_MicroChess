@@ -1,0 +1,410 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Chess AI Compeitition Platform &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="Microchess AI 경진대회" href="01-microchess_ai_competition.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="01-microchess_ai_competition.html" title="Microchess AI 경진대회"
+             accesskey="N">다음</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="chess-ai-compeitition-platform">
+<h1>Chess AI Compeitition Platform<a class="headerlink" href="#chess-ai-compeitition-platform" title="제목 주소">¶</a></h1>
+<ul class="simple">
+<li>이 플랫폼은 Microchess를 플레이하는 AI 개발 경진대회에 사용하기 위한 목적으로 개발되었다.</li>
+<li>이 플랫폼은 크게 Microchss 게임과 예제 AI들 그리고 실행 스크립트로 구성되어 있으며, Windows 10 환경에서 python 3.5 (anaconda)를 사용하여 개발 테스트 되어있다.</li>
+<li>플랫폼이 python 으로 구현되어 있기 때문에 python 으로 AI를 구현하는 것이 권장되지만, 다른 언어로 구현한 AI를 사용할 수 도 있다.</li>
+</ul>
+<div class="section" id="id1">
+<h2>빠른시작<a class="headerlink" href="#id1" title="제목 주소">¶</a></h2>
+<div class="section" id="id2">
+<h3>설치방법<a class="headerlink" href="#id2" title="제목 주소">¶</a></h3>
+<p>이 문서에서는 플랫폼 개발환경과 같은 Windows 10 + python 3.5 (anaconda)를 기준으로 설명한다.
+하지만, 대부분의 구성요소들이 순수 python 으로 구현되어 있기 때문에, 다른 운영체제에서 큰 문제없이 실행
+가능하다.</p>
+<p><strong>설치 순서</strong></p>
+<ol class="arabic">
+<li><p class="first">플랫폼 다운로드 및 압축해제</p>
+</li>
+<li><p class="first">anaconda 다운로드 및 설치 (<a class="reference external" href="https://www.anaconda.com/download/">https://www.anaconda.com/download/</a>)</p>
+</li>
+<li><p class="first">가상환경 생성 및 활성화:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(base) C:\Users\user\MicrochessAICompetition&gt; conda create –n mchess python=3.5
+(base) C:\Users\user\MicrochessAICompetition&gt; activate mchess
+(mchess) C:\Users\user\MicrochessAICompetition&gt;
+</pre></div>
+</div>
+</li>
+<li><p class="first">주요 모듈 설치:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">ipython</span> <span class="n">tqdm</span> <span class="n">pyyaml</span> <span class="n">mkl</span> <span class="n">matplotlib</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">CogSci</span> <span class="n">pygame</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">sqlitedict</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">visdom</span>  <span class="c1"># visdom 설치</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">peterjc123</span> <span class="n">pytorch</span><span class="o">-</span><span class="n">cpu</span><span class="o">=</span><span class="mf">0.3</span><span class="o">.</span><span class="mi">1</span>  <span class="c1"># pytorch 설치 (CPU, Windows 용)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="ai">
+<h3>AI 구현<a class="headerlink" href="#ai" title="제목 주소">¶</a></h3>
+<p>AI를 구현할 때는 BaseAgent (agents/__init__.py)를 상속받아, reset, act, close 세 가지 메소드를 구현한다.
+가장 간단한 예인 Random AI (agents/basic/random_agent.py)는 다음과 같이 구현한다.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">agents</span> <span class="kn">import</span> <span class="n">BaseAgent</span>
+    
+
+<span class="k">class</span> <span class="nc">RandomAgent</span><span class="p">(</span><span class="n">BaseAgent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Random AI</span>
+
+<span class="sd">    - 무작위로 행동을 결정하는 예제</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">moves</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">moves</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>이 세 가지 메소드는 플랫폼에의해 호출된다.</p>
+<p>reset와 close는 AI의 초기화와 종료를 처리한다. 게임을 시작할 때와 끝낼 때 한번씩만 실행된다.
+act는 AI의 턴마다 한번씩 실행된다. 현재 게임상태(state)를 입력받아, 다음 수(move)를 출력해야한다.</p>
+</div>
+<div class="section" id="id3">
+<h3>AI끼리 게임 플레이<a class="headerlink" href="#id3" title="제목 주소">¶</a></h3>
+<p>AI끼리 게임을 플레이할 때는 scripts/run_game.py 을 사용한다. Random AI (white)와 One Step Search AI (black)끼리 플레이할 때는 다음과 같이 실행한다.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">random_agent</span><span class="o">.</span><span class="n">RandomAgent</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">one_step_search_agent</span><span class="o">.</span><span class="n">OneStepSearchAgent</span>
+</pre></div>
+</div>
+<p>white와 black에 AI의 경로를 지정해 주면 게임을 바로 실행하고, 결과를 출력해 준다.</p>
+<p>One Step AI는 다음 수의 결과를 고려하는 간단한 AI이다. 강력한 AI는 아니지만, Random AI는 쉽게 이길 수 있다.
+실행한 결과는 다음과 같이 나타난다.</p>
+<div class="highlight-none notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31</pre></div></td><td class="code"><div class="highlight"><pre><span></span>[2018-04-23 15:40:07,079 DEBUG] White: agents.basic.random_agent.RandomAgent-True
+[2018-04-23 15:40:07,079 DEBUG] White: board value 0.500
+&lt;IPython.core.display.SVG object&gt;
+k n b r
+p . . .
+. . . .
+. . . P
+R B N K
+[2018-04-23 15:40:07,093 DEBUG] White: 400.0 sec. remain
+[2018-04-23 15:40:07,093 DEBUG] White: move b1d3
+[2018-04-23 15:40:07,093 DEBUG] 8/8/8/knbr4/p7/3B4/3P4/R1NK4 b Kk - 1 1
+...  (생략)
+[2018-04-23 18:05:27,443 DEBUG] White: move a1a2
+[2018-04-23 18:05:27,443 DEBUG] 8/8/8/8/k7/8/K7/2b5 b - - 0 14
+[2018-04-23 18:05:27,443 DEBUG] [0, 1]
+[2018-04-23 18:05:27,443 DEBUG] Black Win
+&lt;IPython.core.display.SVG object&gt;
+. . . .
+k . . .
+. . . .
+K . . .
+. . b .
+[2018-04-23 18:05:27,449 DEBUG] Score: [0.000 1.000]
+[2018-04-23 18:05:27,449 DEBUG] turns: 26
+[2018-04-23 18:05:27,449 DEBUG] Game end: True
+[2018-04-23 18:05:27,449 DEBUG] checkmate: False
+[2018-04-23 18:05:27,449 DEBUG] Stalemate: False
+[2018-04-23 18:05:27,449 DEBUG] Insufficient material: True
+[2018-04-23 18:05:27,449 DEBUG] 57 moves: False
+[2018-04-23 18:05:27,449 DEBUG] 5-fold: False
+[2018-04-23 18:05:27,450 DEBUG] Black win: [0, 1]
+</pre></div>
+</td></tr></table></div>
+<p>4~8번째 줄 처럼 매 턴마다, 게임 상태를 텍스트 상태로 출력한다. white는 대문자로 표시하고, black은 소문자로 표시한다.</p>
+<p>23번째 줄부터 게임 결과를 출력한 것이다. Score의 첫번째 숫자는 white의 점수를 나타내고, 두 번째 숫자는 black의 점수를 나타낸다.
+(특별한 경우가 아니면 플랫폼의 나머지 부분에서도 white, black 순서로 출력함)
+게임에 승리하면 1.0, 패배하면 0.0, 그리고 비기면 0.5점을 얻는다.</p>
+<p>일반 Chess (Microchess 포함)와 달리 이 플랫폼에서는 승패가 결정되지 않으면,
+게임이 종료되었을 때 남아있는 기물의 점수를 계산하여 최종 승패를 판단한다.
+따라서, 기존 무승부 조건을 만족한 상태에서 기물의 점수도 동일한 경우만 무승부가 가능하다.</p>
+<p>turns는 전체 게임의 턴 수를 보여주고, 그 다음 줄의 game end는 게임이 정상적으로 종료되었는지 여부를 알려준다.
+그 다음부터는 게임이 종료된 이유(checkmate, stalemate, 등)를 알려준다.</p>
+<p>AI 끼리의 성능을 평가할 때는 benchmark 옵션을 사용한다. benchmark 옵션을 사용하면, 지정된 white와 black 옵션과 상관없이
+총 20게임 (지정된 white와 black으로 10게임, white와 black을 뒤집어서 10게임)을 플레이하고 전체 승률을 출력해준다.</p>
+</div>
+<div class="section" id="id4">
+<h3>AI와 게임 플레이<a class="headerlink" href="#id4" title="제목 주소">¶</a></h3>
+<p>개발한 AI의 성능을 평가하기 위해 직접 게임을 플레이해봐야 할 필요가 있다.
+다음과 같이 플랫폼을 실행하면 직접 게임을 플레이 해 볼 수 있다.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">human</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">one_step_search</span>
+</pre></div>
+</div>
+<div class="figure" id="id6" style="width: 200px">
+<span id="play-interface"></span><img alt="_images/microchess-human.png" src="_images/microchess-human.png" />
+<p class="caption"><span class="caption-text">게임 플레이 인터페이스</span></p>
+</div>
+<p>일반 AI대신 human (agents.basic.human.Player)을 인자로 주면, 게임을 직접 플레이 할 수 있는 인터페이스 <a class="reference internal" href="#play-interface"><span class="std std-ref">게임 플레이 인터페이스</span></a> 가 활성화 된다.</p>
+</div>
+<div class="section" id="id5">
+<h3>게시판<a class="headerlink" href="#id5" title="제목 주소">¶</a></h3>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>경진대회 운영 게시판</dt>
+<dd><ul class="first last">
+<li><a class="reference external" href="https://groups.google.com/forum/#!forum/microchess_ai">https://groups.google.com/forum/#!forum/microchess_ai</a></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="제목 주소">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01-microchess_ai_competition.html">Microchess AI 경진대회</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="01-microchess_ai_competition.html#id1">경진대회 규칙</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01-microchess_ai_competition.html#id4">점수계산</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01-microchess_ai_competition.html#id6">주의사항</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01-microchess_ai_competition.html#id7">운영 게시판</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01-microchess_ai_competition.html#id8">최종 우승자 결정</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="02-microchess_ai_platform.html">Microchess AI 플랫폼</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="02-microchess_ai_platform.html#id1">개요</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02-microchess_ai_platform.html#id3">디렉토리 구조</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02-microchess_ai_platform.html#id4">설치방법</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02-microchess_ai_platform.html#id5">실행 방법</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02-microchess_ai_platform.html#vs-ai">인간 플레이어 vs. AI 인터페이스</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="03-basic_ai_examples.html">기본 AI 예제</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="03-basic_ai_examples.html#random-ai">Random AI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#id1">가장 간단한 AI 구현</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#act">act 메소드의 입력과 출력 요약</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="03-basic_ai_examples.html#search-ai">Search 기반 AI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#one-step-search-ai">One Step Search AI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#two-step-search-ai">Two Step Search AI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#id5">Two Step Search AI 구현</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#negamax-search-ai">Negamax Search AI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#negamax-search-ai-pruning">Negamax Search AI + <span class="math notranslate">\(\alpha-\beta\)</span> pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#microchess">Microchess 상태공간 규모</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#id12">평가함수</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03-basic_ai_examples.html#stockfish">Stockfish</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="04-mcts.html">MCTS 예제</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="04-mcts.html#mcts">MCTS 개요</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04-mcts.html#multi-armed-bandit">Multi-Armed Bandit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04-mcts.html#upper-confidence-tree">Upper Confidence Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04-mcts.html#id3">MCTS 예제</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="04-mcts.html#id4">MCTS 시각화</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="05-self_learning.html">Self-Learning 예제</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="05-self_learning.html#self-learning">Self Learning 알고리즘</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05-self_learning.html#id4">인공신경망</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05-self_learning.html#mcts">MCTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05-self_learning.html#id5">결론 및 한계</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="제목 주소">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">scripts package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#module-scripts.chess_board">scripts.chess_board module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#module-scripts.run_game">scripts.run_game module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#module-scripts.utils">scripts.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html#module-scripts">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">agents package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agents.html#module-agents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agents.basic.html">   basic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agents.basic.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.basic.html#module-agents.basic.debug_agent">agents.basic.debug_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.basic.html#module-agents.basic.human">agents.basic.human module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.basic.html#module-agents.basic.random_agent">agents.basic.random_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.basic.html#module-agents.basic">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agents.search.html">   search</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#module-agents.search">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#module-agents.search.one_step_search_agent">agents.search.one_step_search_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#module-agents.search.two_step_search_agent">agents.search.two_step_search_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#module-agents.search.negamax_search_agent">agents.search.negamax_search_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#module-agents.search.abp_negamax_search_agent">agents.search.abp_negamax_search_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.search.html#module-agents.search.mcts_agent">agents.search.mcts_agent module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agents.self_learning.html">   self_learning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#module-agents.self_learning">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#module-agents.self_learning.agent">agents.self_learning.agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#module-agents.self_learning.models">agents.self_learning.models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#module-agents.self_learning.memory">agents.self_learning.memory module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#module-agents.self_learning.mcts">agents.self_learning.mcts module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.self_learning.html#module-agents.self_learning.utils">agents.self_learning.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agents.stockfish.html">   stockfish</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agents.stockfish.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.stockfish.html#module-agents.stockfish">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.stockfish.html#module-agents.stockfish.agent">agents.stockfish.agent module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">색인</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">모듈 목록</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">검색 페이지</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">목차</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Chess AI Compeitition Platform</a><ul>
+<li><a class="reference internal" href="#id1">빠른시작</a><ul>
+<li><a class="reference internal" href="#id2">설치방법</a></li>
+<li><a class="reference internal" href="#ai">AI 구현</a></li>
+<li><a class="reference internal" href="#id3">AI끼리 게임 플레이</a></li>
+<li><a class="reference internal" href="#id4">AI와 게임 플레이</a></li>
+<li><a class="reference internal" href="#id5">게시판</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tutorial">Tutorial</a></li>
+<li><a class="reference internal" href="#api">API</a></li>
+</ul>
+
+  <h4>다음 항목</h4>
+  <p class="topless"><a href="01-microchess_ai_competition.html"
+                        title="다음 장">Microchess AI 경진대회</a></p>
+  <div role="note" aria-label="source link">
+    <h3>현재 문서</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">소스 코드를 보려면</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="01-microchess_ai_competition.html" title="Microchess AI 경진대회"
+             >다음</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+\babel@toc {english}{}
+\contentsline {chapter}{\numberline {1}빠른시작}{3}{chapter.1}
+\contentsline {section}{\numberline {1.1}설치방법}{3}{section.1.1}
+\contentsline {section}{\numberline {1.2}AI 구현}{3}{section.1.2}
+\contentsline {section}{\numberline {1.3}AI끼리 게임 플레이}{4}{section.1.3}
+\contentsline {section}{\numberline {1.4}AI와 게임 플레이}{5}{section.1.4}
+\contentsline {section}{\numberline {1.5}게시판}{5}{section.1.5}
+\contentsline {chapter}{\numberline {2}Tutorial}{7}{chapter.2}
+\contentsline {section}{\numberline {2.1}Microchess AI 경진대회}{7}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}경진대회 규칙}{7}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}점수계산}{9}{subsection.2.1.2}
+\contentsline {subsection}{\numberline {2.1.3}주의사항}{10}{subsection.2.1.3}
+\contentsline {subsection}{\numberline {2.1.4}운영 게시판}{10}{subsection.2.1.4}
+\contentsline {subsection}{\numberline {2.1.5}최종 우승자 결정}{11}{subsection.2.1.5}
+\contentsline {section}{\numberline {2.2}Microchess AI 플랫폼}{12}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}개요}{12}{subsection.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}디렉토리 구조}{12}{subsection.2.2.2}
+\contentsline {subsection}{\numberline {2.2.3}설치방법}{12}{subsection.2.2.3}
+\contentsline {subsection}{\numberline {2.2.4}실행 방법}{13}{subsection.2.2.4}
+\contentsline {subsection}{\numberline {2.2.5}인간 플레이어 vs. AI 인터페이스}{17}{subsection.2.2.5}
+\contentsline {section}{\numberline {2.3}기본 AI 예제}{18}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}Random AI}{18}{subsection.2.3.1}
+\contentsline {subsubsection}{\numberline {2.3.1.1}가장 간단한 AI 구현}{18}{subsubsection.2.3.1.1}
+\contentsline {subsubsection}{\numberline {2.3.1.2}act 메소드의 입력과 출력 요약}{19}{subsubsection.2.3.1.2}
+\contentsline {subsection}{\numberline {2.3.2}Search 기반 AI}{19}{subsection.2.3.2}
+\contentsline {subsubsection}{\numberline {2.3.2.1}One Step Search AI}{20}{subsubsection.2.3.2.1}
+\contentsline {subsubsection}{\numberline {2.3.2.2}Two Step Search AI}{21}{subsubsection.2.3.2.2}
+\contentsline {subsubsection}{\numberline {2.3.2.3}Two Step Search AI 구현}{22}{subsubsection.2.3.2.3}
+\contentsline {subsubsection}{\numberline {2.3.2.4}Negamax Search AI}{23}{subsubsection.2.3.2.4}
+\contentsline {subsubsection}{\numberline {2.3.2.5}Negamax Search AI + \(\alpha -\beta \) pruning}{24}{subsubsection.2.3.2.5}
+\contentsline {subsubsection}{\numberline {2.3.2.6}Microchess 상태공간 규모}{24}{subsubsection.2.3.2.6}
+\contentsline {subsubsection}{\numberline {2.3.2.7}평가함수}{26}{subsubsection.2.3.2.7}
+\contentsline {subsubsection}{\numberline {2.3.2.8}Stockfish}{27}{subsubsection.2.3.2.8}
+\contentsline {section}{\numberline {2.4}Monte Carlo Tree Search}{29}{section.2.4}
+\contentsline {subsection}{\numberline {2.4.1}MCTS 개요}{29}{subsection.2.4.1}
+\contentsline {subsection}{\numberline {2.4.2}Multi-Armed Bandit}{29}{subsection.2.4.2}
+\contentsline {subsection}{\numberline {2.4.3}Upper Confidence Tree}{31}{subsection.2.4.3}
+\contentsline {subsection}{\numberline {2.4.4}MCTS 예제}{32}{subsection.2.4.4}
+\contentsline {subsection}{\numberline {2.4.5}MCTS 시각화}{33}{subsection.2.4.5}
+\contentsline {section}{\numberline {2.5}Self Learning AI}{34}{section.2.5}
+\contentsline {subsection}{\numberline {2.5.1}Self Learning 알고리즘}{34}{subsection.2.5.1}
+\contentsline {subsection}{\numberline {2.5.2}인공신경망}{35}{subsection.2.5.2}
+\contentsline {subsection}{\numberline {2.5.3}MCTS}{36}{subsection.2.5.3}
+\contentsline {subsection}{\numberline {2.5.4}결론 및 한계}{37}{subsection.2.5.4}
+\contentsline {chapter}{\numberline {3}API}{39}{chapter.3}
+\contentsline {section}{\numberline {3.1}scripts package}{39}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Submodules}{39}{subsection.3.1.1}
+\contentsline {subsection}{\numberline {3.1.2}scripts.chess\_board module}{39}{subsection.3.1.2}
+\contentsline {subsection}{\numberline {3.1.3}scripts.run\_game module}{40}{subsection.3.1.3}
+\contentsline {subsection}{\numberline {3.1.4}scripts.utils module}{42}{subsection.3.1.4}
+\contentsline {subsection}{\numberline {3.1.5}Module contents}{44}{subsection.3.1.5}
+\contentsline {section}{\numberline {3.2}agents package}{44}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}Module contents}{44}{subsection.3.2.1}
+\contentsline {section}{\numberline {3.3}agents.basic package}{44}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}Submodules}{44}{subsection.3.3.1}
+\contentsline {subsection}{\numberline {3.3.2}agents.basic.debug\_agent module}{44}{subsection.3.3.2}
+\contentsline {subsection}{\numberline {3.3.3}agents.basic.human module}{45}{subsection.3.3.3}
+\contentsline {subsection}{\numberline {3.3.4}agents.basic.random\_agent module}{46}{subsection.3.3.4}
+\contentsline {subsection}{\numberline {3.3.5}Module contents}{46}{subsection.3.3.5}
+\contentsline {section}{\numberline {3.4}agents.search package}{46}{section.3.4}
+\contentsline {subsection}{\numberline {3.4.1}Submodules}{46}{subsection.3.4.1}
+\contentsline {subsection}{\numberline {3.4.2}Module contents}{46}{subsection.3.4.2}
+\contentsline {subsection}{\numberline {3.4.3}agents.search.one\_step\_search\_agent module}{46}{subsection.3.4.3}
+\contentsline {subsection}{\numberline {3.4.4}agents.search.two\_step\_search\_agent module}{47}{subsection.3.4.4}
+\contentsline {subsection}{\numberline {3.4.5}agents.search.negamax\_search\_agent module}{47}{subsection.3.4.5}
+\contentsline {subsection}{\numberline {3.4.6}agents.search.abp\_negamax\_search\_agent module}{48}{subsection.3.4.6}
+\contentsline {subsection}{\numberline {3.4.7}agents.search.mcts\_agent module}{49}{subsection.3.4.7}
+\contentsline {section}{\numberline {3.5}agents.self\_learning package}{51}{section.3.5}
+\contentsline {subsection}{\numberline {3.5.1}Submodules}{51}{subsection.3.5.1}
+\contentsline {subsection}{\numberline {3.5.2}Module contents}{51}{subsection.3.5.2}
+\contentsline {subsection}{\numberline {3.5.3}agents.self\_learning.agent module}{52}{subsection.3.5.3}
+\contentsline {subsection}{\numberline {3.5.4}agents.self\_learning.models module}{54}{subsection.3.5.4}
+\contentsline {subsection}{\numberline {3.5.5}agents.self\_learning.memory module}{54}{subsection.3.5.5}
+\contentsline {subsection}{\numberline {3.5.6}agents.self\_learning.mcts module}{55}{subsection.3.5.6}
+\contentsline {subsection}{\numberline {3.5.7}agents.self\_learning.utils module}{56}{subsection.3.5.7}
+\contentsline {section}{\numberline {3.6}agents.stockfish package}{58}{section.3.6}
+\contentsline {subsection}{\numberline {3.6.1}Submodules}{58}{subsection.3.6.1}
+\contentsline {subsection}{\numberline {3.6.2}Module contents}{58}{subsection.3.6.2}
+\contentsline {subsection}{\numberline {3.6.3}agents.stockfish.agent module}{58}{subsection.3.6.3}
+\contentsline {chapter}{Python 모듈 목록}{61}{section*.175}

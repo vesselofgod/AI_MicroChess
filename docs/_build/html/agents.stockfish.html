@@ -1,0 +1,186 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>agents.stockfish package &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="prev" title="agents.self_learning package" href="agents.self_learning.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="agents.self_learning.html" title="agents.self_learning package"
+             accesskey="P">이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="agents-stockfish-package">
+<h1>agents.stockfish package<a class="headerlink" href="#agents-stockfish-package" title="제목 주소">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="제목 주소">¶</a></h2>
+</div>
+<div class="section" id="module-agents.stockfish">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-agents.stockfish" title="제목 주소">¶</a></h2>
+</div>
+<div class="section" id="module-agents.stockfish.agent">
+<span id="agents-stockfish-agent-module"></span><h2>agents.stockfish.agent module<a class="headerlink" href="#module-agents.stockfish.agent" title="제목 주소">¶</a></h2>
+<p>Stockfish Wrapper</p>
+<dl class="class">
+<dt id="agents.stockfish.agent.Stockfish">
+<em class="property">class </em><code class="descclassname">agents.stockfish.agent.</code><code class="descname">Stockfish</code><span class="sig-paren">(</span><em>name</em>, <em>color</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/stockfish/agent.html#Stockfish"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.stockfish.agent.Stockfish" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agents.html#agents.BaseAgent" title="agents.BaseAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">agents.BaseAgent</span></code></a></p>
+<p>UCI 인터페이스를 이용해 Stockfish를 래핑함, 실제 구현은 stockfish_8_*.exe 임</p>
+<p>Microchees에 맞게 Stockfish의 기능을 제한함</p>
+<ul class="simple">
+<li>탐색번위 제한: 5x4 번위 이외의 공간을 탐색하지 못하게 함</li>
+<li>castling 제한: castling 위치가 다르기 때문에 Stockfish에서는 에러 발생</li>
+</ul>
+<p>TODO: 간헐적으로 에러가 발생함, 원인은 아직 불명</p>
+<dl class="method">
+<dt id="agents.stockfish.agent.Stockfish.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/stockfish/agent.html#Stockfish.act"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.stockfish.agent.Stockfish.act" title="정의 주소">¶</a></dt>
+<dd><p>AI 초기화</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><strong>state</strong> (<a class="reference internal" href="scripts.html#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- 현재 게임 상태</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body">다음 수 반환<ul class="simple">
+<li><code class="xref py py-class docutils literal notranslate"><span class="pre">chess.Move</span></code> -- AI의 다음수</li>
+<li>None -- 다음 수를 반환할 필요가 없는 경우</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.stockfish.agent.Stockfish.available_squares">
+<code class="descname">available_squares</code><em class="property"> = [32, 33, 34, 35, 24, 25, 26, 27, 16, 17, 18, 19, 8, 9, 10, 11, 0, 1, 2, 3]</em><a class="headerlink" href="#agents.stockfish.agent.Stockfish.available_squares" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agents.stockfish.agent.Stockfish.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/stockfish/agent.html#Stockfish.close"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.stockfish.agent.Stockfish.close" title="정의 주소">¶</a></dt>
+<dd><p>AI 종료
+마지막에 한 번 실행</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agents.stockfish.agent.Stockfish.engine">
+<code class="descname">engine</code><em class="property"> = None</em><a class="headerlink" href="#agents.stockfish.agent.Stockfish.engine" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.stockfish.agent.Stockfish.engine_path">
+<code class="descname">engine_path</code><em class="property"> = 'stockfish'</em><a class="headerlink" href="#agents.stockfish.agent.Stockfish.engine_path" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agents.stockfish.agent.Stockfish.level">
+<code class="descname">level</code><em class="property"> = 20</em><a class="headerlink" href="#agents.stockfish.agent.Stockfish.level" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agents.stockfish.agent.Stockfish.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents/stockfish/agent.html#Stockfish.reset"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#agents.stockfish.agent.Stockfish.reset" title="정의 주소">¶</a></dt>
+<dd><p>AI 초기화
+게임 초기에 한 번 실행</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">목차</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">agents.stockfish package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-agents.stockfish">Module contents</a></li>
+<li><a class="reference internal" href="#module-agents.stockfish.agent">agents.stockfish.agent module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>이전 항목</h4>
+  <p class="topless"><a href="agents.self_learning.html"
+                        title="이전 장">agents.self_learning package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>현재 문서</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/agents.stockfish.rst.txt"
+            rel="nofollow">소스 코드를 보려면</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="agents.self_learning.html" title="agents.self_learning package"
+             >이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

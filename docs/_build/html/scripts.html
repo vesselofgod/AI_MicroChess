@@ -1,0 +1,517 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>scripts package &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="agents package" href="agents.html" />
+    <link rel="prev" title="Self Learning AI" href="05-self_learning.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="agents.html" title="agents package"
+             accesskey="N">다음</a> |</li>
+        <li class="right" >
+          <a href="05-self_learning.html" title="Self Learning AI"
+             accesskey="P">이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="scripts-package">
+<h1>scripts package<a class="headerlink" href="#scripts-package" title="제목 주소">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="제목 주소">¶</a></h2>
+</div>
+<div class="section" id="module-scripts.chess_board">
+<span id="scripts-chess-board-module"></span><h2>scripts.chess_board module<a class="headerlink" href="#module-scripts.chess_board" title="제목 주소">¶</a></h2>
+<p>인간 플레이어 인터페이스와 관련된 클래스 모음</p>
+<dl class="class">
+<dt id="scripts.chess_board.ChessBoard">
+<em class="property">class </em><code class="descclassname">scripts.chess_board.</code><code class="descname">ChessBoard</code><a class="reference internal" href="_modules/scripts/chess_board.html#ChessBoard"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.chess_board.ChessBoard" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>인간 플레이어 인터페이스 시각화 클래스</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">속성 block_size:</th><td class="field-body">int, 체스 한 칸의 픽셀 크기</td>
+</tr>
+<tr class="field-even field"><th class="field-name">속성 width:</th><td class="field-body">int, 마이크로 체스 가로 칸 수</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">속성 height:</th><td class="field-body">int, 마이크로 체스 세로 칸 수</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="scripts.chess_board.ChessBoard.block_size">
+<code class="descname">block_size</code><em class="property"> = 62</em><a class="headerlink" href="#scripts.chess_board.ChessBoard.block_size" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="scripts.chess_board.ChessBoard.height">
+<code class="descname">height</code><em class="property"> = 310</em><a class="headerlink" href="#scripts.chess_board.ChessBoard.height" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scripts.chess_board.ChessBoard.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>board</em>, <em>move=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/chess_board.html#ChessBoard.step"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.chess_board.ChessBoard.step" title="정의 주소">¶</a></dt>
+<dd><p>board 객체와 move 객체를 입력받아,
+pygame 모듈을 사용해서 상태를 시각화 함</p>
+<ul class="simple">
+<li>AI 플레이어가 Move 를 입력하면, 단순히 현재 상태를 시각화 시킴고 그대로 Move를 반환</li>
+<li>인간플레이어는 Move 객체대신 None을 입력하고, 이 함수에서 마우스 입력을 받아, 
+게임 상태를 변경할 Move 객체를 생성해서 반환함</li>
+<li>폰을 마지막 칸으로 보내면 무조건 퀸으로 승급하도록 했음 (AI는 어떤 기물로든 승급가능)</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>board</strong> (<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- </li>
+<li><strong>move</strong> (<em>chess.Move</em>) -- </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(chess.Move) --</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scripts.chess_board.ChessBoard.width">
+<code class="descname">width</code><em class="property"> = 248</em><a class="headerlink" href="#scripts.chess_board.ChessBoard.width" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="scripts.chess_board.micro_to_std">
+<code class="descclassname">scripts.chess_board.</code><code class="descname">micro_to_std</code><em class="property"> = {0: 0, 1: 1, 2: 2, 3: 3, 4: 8, 5: 9, 6: 10, 7: 11, 8: 16, 9: 17, 10: 18, 11: 19, 12: 24, 13: 25, 14: 26, 15: 27, 16: 32, 17: 33, 18: 34, 19: 35}</em><a class="headerlink" href="#scripts.chess_board.micro_to_std" title="정의 주소">¶</a></dt>
+<dd><p>체스 기물 이미지 파일 경로</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="scripts.chess_board.std_to_micro">
+<code class="descclassname">scripts.chess_board.</code><code class="descname">std_to_micro</code><em class="property"> = {0: 0, 1: 1, 2: 2, 3: 3, 8: 4, 9: 5, 10: 6, 11: 7, 16: 8, 17: 9, 18: 10, 19: 11, 24: 12, 25: 13, 26: 14, 27: 15, 32: 16, 33: 17, 34: 18, 35: 19}</em><a class="headerlink" href="#scripts.chess_board.std_to_micro" title="정의 주소">¶</a></dt>
+<dd><p>마이크로 체스 좌표와 일반 체스 좌표를 매핑</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.run_game">
+<span id="scripts-run-game-module"></span><h2>scripts.run_game module<a class="headerlink" href="#module-scripts.run_game" title="제목 주소">¶</a></h2>
+<p>scripts/run_game.py</p>
+<p>Microchess AI 플랫폼에서 사용하는 체스와 관련된 기본 구성 요소 모음</p>
+<dl class="class">
+<dt id="scripts.run_game.Environment">
+<em class="property">class </em><code class="descclassname">scripts.run_game.</code><code class="descname">Environment</code><a class="reference internal" href="_modules/scripts/run_game.html#Environment"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Environment" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>마이크로 체스 게임 환경의 기본 객체</p>
+<ul class="simple">
+<li>게임의 초기화, 진행, 종료에 관한 기능은 담당</li>
+<li>문자를 이용한 기초적인 시각화 가능</li>
+<li>그 이상의 시각화 기능은 chess_board.py (pygame)와 visdom에서 담당</li>
+</ul>
+<dl class="method">
+<dt id="scripts.run_game.Environment.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Environment.close"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Environment.close" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scripts.run_game.Environment.render">
+<code class="descname">render</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Environment.render"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Environment.render" title="정의 주소">¶</a></dt>
+<dd><p>시각화</p>
+<ul class="simple">
+<li>언제나 jupyter console에 출력 가능한 svg객체를 출력함 (jupyter console에서 시각화 됨)</li>
+<li>문자열을 이용해 체스 상태를 출력함 (대문자: white, 소문자: black)</li>
+<li>인간 플레이어가 한명이라도 게임을 할 때는 pygame을 이용함</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.run_game.Environment.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>fen=None</em>, <em>max_turns=80</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Environment.reset"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Environment.reset" title="정의 주소">¶</a></dt>
+<dd><p>환경 초기화</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>fen</strong> (<em>str</em>) -- fen 표기법으로 체스 보드 상태를 초기화 함, None 으로 전달할 경우 기본 초기화 상태로 세팅함</li>
+<li><strong>max_turns</strong> (<em>int</em>) -- 최대 게임 턴, 기봅값 80</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(State) -- 현재 게임 상태 반환</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.run_game.Environment.step">
+<code class="descname">step</code><span class="sig-paren">(</span><em>move</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Environment.step"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Environment.step" title="정의 주소">¶</a></dt>
+<dd><p>현재 상태에 move를 적용하여 다음 턴으로 게임을 진행</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><strong>move</strong> -- chess.Move, 현재 플레이어의 다음 수</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body">(<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a>, float, bool, dict) --<ul class="simple">
+<li>State, move가 적용된 다음 게임 상태</li>
+<li>float, 보상, 이번 수로 게임이 승리하면 1., 패배하면 0., 그 외에는 0.5</li>
+<li>bool, 이번 수로 게임이 종료되었는지 여부</li>
+<li>dict, 그 외 기타 정보 전달 용</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scripts.run_game.Evaluator">
+<em class="property">class </em><code class="descclassname">scripts.run_game.</code><code class="descname">Evaluator</code><a class="reference internal" href="_modules/scripts/run_game.html#Evaluator"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Evaluator" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p><strong>기본 예제에서 사용하는 평가함수 모음</strong></p>
+<p>현재 상태(board.Chess)와 현재 턴(bool, white=True, black=False)를 입력으로 받아,
+평가 값을 [0, 1] 실수로 반환함</p>
+<dl class="staticmethod">
+<dt id="scripts.run_game.Evaluator.eval">
+<em class="property">static </em><code class="descname">eval</code><span class="sig-paren">(</span><em>turn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Evaluator.eval"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Evaluator.eval" title="정의 주소">¶</a></dt>
+<dd><p>기물 점수를 계산하는 평가함수</p>
+<ul class="simple">
+<li>현재 판위에 남아있는 기물의 종류와 개수에 따라 [0, 1] 실수값으로 평가함</li>
+<li>게임의 승패가 결정되어 있다면, Evaluator.win_or_lose로 평가함</li>
+<li>게임이 종료되지 않았다면 기물의 종류와 개수에 따라 점수를 계산한 뒤 [0, 1]값으로 정규화 시킴</li>
+<li>절대적인, 상대적인 기물의 위치, 캐슬링 여부등 다른 요소는 고려하지 않음</li>
+</ul>
+<p>기물의 점수</p>
+<ul class="simple">
+<li>Pawn: 1점</li>
+<li>Knight, Bissop: 3점</li>
+<li>Rook: 5점</li>
+<li>Queen: 10점</li>
+<li>King: 4점</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>board</strong> (<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- 평가할 상태</li>
+<li><strong>turn</strong> (<em>bool</em>) -- chess.WHITE 또는 chess.BLACK</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(float) -- [0, 1] 범위 실수</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="scripts.run_game.Evaluator.eval_2">
+<em class="property">static </em><code class="descname">eval_2</code><span class="sig-paren">(</span><em>turn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Evaluator.eval_2"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Evaluator.eval_2" title="정의 주소">¶</a></dt>
+<dd><p>Evaluator.eval 결과([0, 1] 실수)를 [-1, 1] 실수로 변환</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>board</strong> (<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- 평가할 상태</li>
+<li><strong>turn</strong> (<em>bool</em>) -- chess.WHITE 또는 chess.BLACK</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(float) -- [-1, 1] 실수</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="scripts.run_game.Evaluator.win_or_lose">
+<em class="property">static </em><code class="descname">win_or_lose</code><span class="sig-paren">(</span><em>turn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Evaluator.win_or_lose"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Evaluator.win_or_lose" title="정의 주소">¶</a></dt>
+<dd><p>승/패만 판단하는 간단한 평가함수</p>
+<ul class="simple">
+<li>간단한 평가함수, [0., 0.5, 1.] 중 하나의 값을 반환</li>
+<li>승리하면 1., 패배하면 0.을 반환함</li>
+<li>나머지 경우에는 0.5 반환 (무승부, 게임이 진행 중)</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>board</strong> (<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><em>State</em></a>) -- 평가할 게임 상태</li>
+<li><strong>turn</strong> (<em>bool</em>) -- chess.WHITE 또는 chess.BLACK</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(float) -- [0, 1] 범위 실수</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scripts.run_game.Move">
+<em class="property">class </em><code class="descclassname">scripts.run_game.</code><code class="descname">Move</code><span class="sig-paren">(</span><em>from_square</em>, <em>to_square</em>, <em>promotion=None</em>, <em>drop=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#Move"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.Move" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">chess.Move</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="scripts.run_game.State">
+<em class="property">class </em><code class="descclassname">scripts.run_game.</code><code class="descname">State</code><span class="sig-paren">(</span><em>fen='8/8/8/knbr4/p7/8/3P4/RBNK4 w Kk - 0 1'</em>, <em>chess960=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#State"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.State" title="정의 주소">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">chess.Board</span></code></p>
+<p>마이크로 체스 AI 플랫폼에서 게임 상태를 전달하기 위해 사용</p>
+<ul class="simple">
+<li>chess.Board + forward 기능</li>
+<li>chess.Board 에서 제공하는 대부분의 기능은 그대로 사용가능</li>
+<li>향후 부정행위에 사용할 수 있는 기능이 발견되는 경우 일부 기능이 제한될 수 있음</li>
+</ul>
+<dl class="attribute">
+<dt id="scripts.run_game.State.black_remain_sec">
+<code class="descname">black_remain_sec</code><em class="property"> = 400</em><a class="headerlink" href="#scripts.run_game.State.black_remain_sec" title="정의 주소">¶</a></dt>
+<dd><p>(int) -- black 플레이어의 남은 시간</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scripts.run_game.State.color">
+<code class="descname">color</code><a class="headerlink" href="#scripts.run_game.State.color" title="정의 주소">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="scripts.run_game.State.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>move</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#State.forward"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.State.forward" title="정의 주소">¶</a></dt>
+<dd><p>시뮬레이션
+- 현재 State에 move를 적용한 다음 상태를 반환</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><strong>move</strong> (<a class="reference internal" href="#scripts.run_game.Move" title="scripts.run_game.Move"><em>Move</em></a>) -- </td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body">(<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a>) -- move가 적용된 다음 상태</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scripts.run_game.State.white_remain_sec">
+<code class="descname">white_remain_sec</code><em class="property"> = 400</em><a class="headerlink" href="#scripts.run_game.State.white_remain_sec" title="정의 주소">¶</a></dt>
+<dd><p>(int) -- white 플레이어의 남은 시간</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="scripts.run_game.TIME_LIMIT">
+<code class="descclassname">scripts.run_game.</code><code class="descname">TIME_LIMIT</code><em class="property"> = 400</em><a class="headerlink" href="#scripts.run_game.TIME_LIMIT" title="정의 주소">¶</a></dt>
+<dd><p>한 플레이어에게 주어진 시간제한,
+한턴에 10초씩 80턴으로 계산해서 한 플레이어에 400초 할당</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.run_game.game">
+<code class="descclassname">scripts.run_game.</code><code class="descname">game</code><span class="sig-paren">(</span><em>white</em>, <em>black</em>, <em>human_play</em>, <em>initial_fen</em>, <em>max_turns</em>, <em>timelimit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/run_game.html#game"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.run_game.game" title="정의 주소">¶</a></dt>
+<dd><p>게임을 1회 실행하는 함수</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>white</strong> (<em>str</em>) -- white 플레이어의 객체(BaseAgent 상속한 클래스) 경로</li>
+<li><strong>black</strong> (<em>str</em>) -- black 플레이어의 객체(BaseAgent 상속한 클래스) 경로</li>
+<li><strong>human_play</strong> (<em>bool</em>) -- 인간 플레이어용 인터페이스를 사용여부</li>
+<li><strong>initial_fen</strong> (<em>str</em>) -- 게임의 초기상태를 fen으로 전달</li>
+<li><strong>max_turns</strong> (<em>int</em>) -- 최대 게임 턴, 경진대회 기본은 80</li>
+<li><strong>timelimit</strong> (<em>int</em>) -- 최대 게임 시간, 경진대회 기본은 400</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">(<a class="reference internal" href="#scripts.run_game.State" title="scripts.run_game.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a>, int, float) -- state, turn, reward</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.utils">
+<span id="scripts-utils-module"></span><h2>scripts.utils module<a class="headerlink" href="#module-scripts.utils" title="제목 주소">¶</a></h2>
+<p>마이크로 체스와 관계없는 기타 코드 모음</p>
+<dl class="function">
+<dt id="scripts.utils.ascii_plot">
+<code class="descclassname">scripts.utils.</code><code class="descname">ascii_plot</code><span class="sig-paren">(</span><em>xs</em>, <em>ys</em>, <em>title=None</em>, <em>print_out=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/utils.html#ascii_plot"><span class="viewcode-link">[소스]</span></a><a class="headerlink" href="#scripts.utils.ascii_plot" title="정의 주소">¶</a></dt>
+<dd><p>gnuplot을 이용해서 ascii 문자로 꺽은선 그래프를 그려줌
+GNU plot을 별도로 설치해야 함
+- Windows (C:/Program Files/gnuplot/bin/gnuplot.exe)
+- Linux (/usr/bin/gnuplot)
+설치가 되어있지 않으면 경고 메시지만 출력함</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scripts.utils</span> <span class="k">import</span> <span class="n">ascii_plot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">ascii_plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> 0.4 +------------------------------------------------------------------------------+
+     |                   +                   +                  +               *** |
+     |                                                                        **    |
+     |                                                                     ***      |
+0.35 |-+                                                                ***       +-|
+     |                                                               ***            |
+     |                                                            ***               |
+ 0.3 |-+                                                        **                +-|
+     |                                                       ***                    |
+     |                                                    ***                       |
+     |                                                 ***                          |
+0.25 |-+                                            ***                           +-|
+     |                                            **                                |
+     |                                         ***                                  |
+ 0.2 |-+                                   **A*                                   +-|
+     |                               ******                                         |
+     |                         ******                                               |
+0.15 |-+                 ******                                                   +-|
+     |              *****                                                           |
+     |        ******                                                                |
+     |  ******           +                   +                  +                   |
+ 0.1 +------------------------------------------------------------------------------+
+     0                  0.5                  1                 1.5                  2
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">매개 변수:</th><td class="field-body"><ul class="first simple">
+<li><strong>xs</strong> -- list of {int, float}, 숫자 리스트</li>
+<li><strong>ys</strong> -- list of {int, float}, 숫자 리스트</li>
+<li><strong>title</strong> -- str, 그래프 위에 표시할 문자열</li>
+<li><strong>print_out</strong> -- bool, True일 때는 반환하는 것과 별개로 그래프를 print 함</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">반환:</th><td class="field-body"><p class="first last">str, ascii 문자로 만든 그래프</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-scripts" title="제목 주소">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">목차</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">scripts package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-scripts.chess_board">scripts.chess_board module</a></li>
+<li><a class="reference internal" href="#module-scripts.run_game">scripts.run_game module</a></li>
+<li><a class="reference internal" href="#module-scripts.utils">scripts.utils module</a></li>
+<li><a class="reference internal" href="#module-scripts">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>이전 항목</h4>
+  <p class="topless"><a href="05-self_learning.html"
+                        title="이전 장">Self Learning AI</a></p>
+  <h4>다음 항목</h4>
+  <p class="topless"><a href="agents.html"
+                        title="다음 장">agents package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>현재 문서</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/scripts.rst.txt"
+            rel="nofollow">소스 코드를 보려면</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="agents.html" title="agents package"
+             >다음</a> |</li>
+        <li class="right" >
+          <a href="05-self_learning.html" title="Self Learning AI"
+             >이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

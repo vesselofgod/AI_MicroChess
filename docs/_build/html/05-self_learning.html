@@ -1,0 +1,331 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Self Learning AI &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="scripts package" href="scripts.html" />
+    <link rel="prev" title="Monte Carlo Tree Search" href="04-mcts.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="scripts.html" title="scripts package"
+             accesskey="N">다음</a> |</li>
+        <li class="right" >
+          <a href="04-mcts.html" title="Monte Carlo Tree Search"
+             accesskey="P">이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="self-learning-ai">
+<h1>Self Learning AI<a class="headerlink" href="#self-learning-ai" title="제목 주소">¶</a></h1>
+<p>MCTS를 포함해 트리 탐색 알고리즘의 성능을 개선하는 방법은 크게 두 가지가 있다.
+첫째, 탐색할 가치가 있는 상태를 선별적으로 탐색한다. 둘째, 정교한 평가함수를 사용한다.
+첫 번째 방법은 흔히 가지치기(pruning)라고 불리는 방법으로, 여러 행동들 중에서 실제로 탐색해보지 않더라도,
+결과가 나쁠 것으로 예측 되는 것을 무시하는 기법이다. <span class="math notranslate">\(\alpha-\beta\)</span> pruning 도 이런 기법의 일종이다.
+이런 기법들은 <span class="math notranslate">\(O(b^d)\)</span> 에서 <em>b</em> 를 줄이는 효과가 있다.
+두 번째 방법은 높은 성능을 보이는 많은 AI에서 사용하는 방법이다. 전문가에 의해 혹은 데이터에 기반해 설계된 정교한
+평가함수를 이용해 실제 시뮬레이션을 해보지 않고 미래를 예측하는 것이다. 실제 결과와 차이가 있을 가능성이 있지만,
+잘 설계한다면 <span class="math notranslate">\(O(b^d)\)</span> 에서 <em>d</em> 를 크게 줄일 수 있다.
+<span class="math notranslate">\(\alpha-\beta\)</span> pruning 은 특정 게임에 대한 전문지식에 의존하지 않지만, 이런 기법들의 대부분은 특정 게임에 강하게 종속되어 있다.
+때문에 Stockfish가 아무리 강력한 체스 AI라고 해도, 장기나 바둑같은 다른 보드게임을 전해 플레이 할 수 없는 것이다.
+반면 MCTS는 전문지식에 거의 의존하지 않기 때문에 최소한의 변경만으로도 다른 게임에 쉽게 적용가능하다.
+하지만, 기본 계산비용이 크기 때문에 계산비용을 줄이기 위한 방법이 필요하고, 결국 가지치기나 평가함수를 도입할 필요가 있다.
+단, 가지치기나 평가함수가 전문지식에 의존하지 않아야 MCTS의 장점을 유지할 수 있다.</p>
+<p>Alpha Go Zero <a class="footnote-reference" href="#id6" id="id1">[1]</a> 는 이 문제를 해결한 가장 유명한 예이다. 기본 의사결정은 Monte-Carlo Tree Search (MCTS)를 사용하면서,
+인공신경망을 이용해 가지치기와 평가를 수행한다.
+기존 Alpha Go <a class="footnote-reference" href="#id7" id="id2">[2]</a> 도 이것과 동일한 접근방법이지만, 인공신경망을 학습할 때, 사람들이 플래이한 기보를 이용해 기본학습을 진행했다.
+아무것도 모르는 처음(scratch)부터 학습하는 것은 어렵기 때문에 기보 데이터를 이용해 기본적인 플레이방법을 학습하고,
+그 이후 강화학습으로 성능을 향상시키는 방법을 사용했다.
+반면 Alpha Go Zero 는 처음부터 기보 데이터를 전혀 사용하지 않고, AI 가 스스로 게임을 플레이(Self Play) 하면서
+게임 데이터를 수집하고 학습 하였다.
+따라서, Alpha Go Zero는 전혀 탐색알고리즘, 가지치기, 그리고 평가함수까지 알고리즘의 거의 모든 부분이 전문지식(도메인 지식)에 독립적이다.
+그 덕분에 Alpha Go Zero가 발표된지 불과 몇 달 뒤에 바둑 뿐 아니라 다른 보드 게임을 모두 플레이 할 수 있는 Alpha Zero <a class="footnote-reference" href="#id8" id="id3">[3]</a> 가 공개되었다.
+Alpha Zero는 학습을 시작한지 불과 4시간만에 기존에 가장 강력한 AI였던 Stockfish를 뛰어넘는 성능에 도달할 수 있었다.</p>
+<p>Self Learning AI 예제는 Alpha Go Zero와 유사한 방식으로 구현되었다. 실제 Alpha Zero는 매우 큰 계산비용을 요구하기 때문에,
+최종 학습성능은 부족하더라도, 보다 빠르게 학습 결과를 확인할 수 있도록, 보다 간단하게 구현했다.
+평가방식으로는 MCTS AI와 마찬가지로 Stockfish를 대상으로 승률을 측정했다.
+MCTS AI는 약 7,000~12,000번의 시뮬레이션(Intel i7-7700에서 10초 제한)에서 근소한 차이로 Stockfish를 이기는 수준이었지만,
+약 4일을 학습한 인공신경망으로 성능을 강화한 Self Learning AI는 동일한 실험에서 승률 0.7을 기록했다.
+특히 Self Learning AI가 White 일 때는 거의 모든 게임을 이겨서 승률 0.925를 기록했으며,
+Black일 때도 대부분 게임을 무승부로 끝내서 0.475를 기록했다.</p>
+<div class="section" id="self-learning">
+<h2>Self Learning 알고리즘<a class="headerlink" href="#self-learning" title="제목 주소">¶</a></h2>
+<div class="literal-block-wrapper docutils container" id="id9">
+<span id="self-learning-code"></span><div class="code-block-caption"><span class="caption-text">Self Learning 알고리즘</span><a class="headerlink" href="#id9" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">memory</span> <span class="o">=</span> <span class="n">ReplayMemory</span><span class="p">()</span>
+<span class="n">best_model</span> <span class="o">=</span> <span class="n">create_mode</span><span class="p">()</span>
+<span class="n">current_model</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">best_model</span><span class="p">)</span>
+
+<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+     <span class="c1"># self play: best_model 끼리 게임 플레이하고, 학습 데이터 생성</span>
+     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_self_play</span><span class="p">):</span>
+         <span class="n">state</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">legal_moves</span><span class="p">,</span> <span class="n">win</span> <span class="o">=</span> <span class="n">play_game</span><span class="p">(</span><span class="n">best_model</span><span class="p">,</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">exploration</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+         <span class="n">reward</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">win</span> <span class="o">-</span> <span class="mi">1</span>
+         <span class="n">memory</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">legal_moves</span><span class="p">,</span> <span class="n">reward</span><span class="p">)</span>
+
+     <span class="c1"># training: 학습 데이터로 current_model 학습</span>
+     <span class="n">train_date</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">get_minibatch</span><span class="p">()</span>
+     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_train</span><span class="p">):</span>
+         <span class="n">current_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+
+     <span class="c1"># evaluation: current_model이 best_model보다 좋아지면</span>
+     <span class="c1">#    current_model을 best_model로 교체</span>
+     <span class="n">total_wins</span> <span class="o">=</span> <span class="mi">0</span>
+     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_evaluations</span><span class="p">):</span>
+         <span class="n">state</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">legal_moves</span><span class="p">,</span> <span class="n">win</span> <span class="o">=</span> <span class="n">play_game</span><span class="p">(</span><span class="n">current_model</span><span class="p">,</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">exploration</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+         <span class="n">total_wins</span> <span class="o">+=</span> <span class="n">win</span>
+
+     <span class="k">if</span> <span class="n">total_wins</span> <span class="o">/</span> <span class="n">n_evaluations</span> <span class="o">&gt;</span> <span class="mf">0.6</span><span class="p">:</span>
+         <span class="n">best_model</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">current_model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p><a class="reference internal" href="#self-learning-code"><span class="std std-ref">Self Learning 알고리즘</span></a> 는 전체 알고리즘의 의사코드이다. 이 코드는 실제 예제 코드가 아니라, 설명하기 위해 단순화 시킨 코드이다.
+이 알고리즘은 기본적으로 현재 학습한 가장 좋은 모델(인공신경망)끼리 게임을 플레이한 데이터를 이용해서 현재 모델을 학습하는 것이다.
+한번 반복할 때마다, 현재 모델이 기존의 가장 좋은 모델보다 좋아졌는지 평가하고, 더 좋다고 판단될 경우 교체하기 때문에,
+점진적으로 성능을 향상시켜 나갈 수 있다.</p>
+</div>
+<div class="section" id="id4">
+<h2>인공신경망<a class="headerlink" href="#id4" title="제목 주소">¶</a></h2>
+<div class="figure" id="id10" style="width: 600px">
+<span id="neural-network-architecture"></span><img alt="_images/neural_network.png" src="_images/neural_network.png" />
+<p class="caption"><span class="caption-text">인공신경망 구조</span></p>
+</div>
+<p>Best model과 Current model은 현재 게임상태를 입력받아, 다음에 둘 수의 확률과 평가값을 출력하는 인공신경망이다.
+예제 AI가 기본으로 사용하는 <a class="reference internal" href="#neural-network-architecture"><span class="std std-ref">인공신경망 구조</span></a> 는 Convolution layer 6개 층에 Linear layer를 결합한
+간단한 구조를 가지고 있다. Observation과 State 노드가 입력 노드이고, Policy와 Value 노드가 출력노드이다.
+시각적으로 보이는 정보는 Observation 노드로 입력되어 64개의 필터(필터 크기: 3 <span class="math notranslate">\(\times\)</span> 3 )를 가지고있는 6개의 Convolution layer를 지난다.
+그 뒤에 비시각적인 정보가 저장된 2차원 State노드와 결합하여 Linear layer를 거치고 최종적으로는 Policy와 Value 노드로 예측 값이 출력된다.</p>
+<p>Observation 는 <span class="math notranslate">\(12 \times 5 \times 4\)</span> 차원의 배열로 되어있다.
+Observation에 입력할 정보는 현재 보드 상태 수치연산에 적합하도록 배열 형태로 변형해야한다.
+첫 번째 차원은 12종류의 기물마다 할당되어 있고, 두 번째와 세 번째 차원은 기물의 위치를 의미한다. 특정 기물이 특정 위치에 있으면
+배열에서 해당하는 부분의 값은 1로 할당하고, 나머지 부분은 0으로 한다.
+그외 시각적으로 보이는 게임 상태이외의 정보를 입력하기 위한 것이 State이다. 여기에는 캐슬링 가능여부가 기록되어 있다.
+캐슬링이 가능하면 1, 불가능하면 0으로 설정한다.</p>
+<p>학습옵션 mirror에 따라 차원이 할당되는 부분이 달라진다. 기본적으로는 mirror 옵션이 켜져있는데, 이 상태에서는
+내 기물이 Observation의 1~6 채널을 사용하고 상대방의 기물이 6~12채널을 사용한다. State에서도 내가 0차원을 상대방이 1차원을 사용한다.
+하지만, mirror 옵션을 끄면 White가 Observation의 1~6차원, State의 0차원을 사용한다.</p>
+<p>출력부에는 평가값 출력노드(Value) 한 개와 정책 출력노드(Policy) 400개가 있다.
+Microchess 보드에 기물을 놓을 수 있는 위치는 총 20개( <span class="math notranslate">\(5 \times 4\)</span> )이기 때문에,
+현재 기물의 위치와 기물의 다음 위치의 모든 경우의 수는 총 400개가 된다.
+하지만, 그 중에 대부분은 현재 기물이 없거나 기물이 움직일 수 없는 곳이기 때문에 현재 게임 상태에서는 유효하지 않다.
+유효하지 않은 수와 관련된 출력을 mask를 사용해 제거한다. 유효하지 않은 수를 -100으로 덮어쓰면,
+마지막 softmax 출력에서 0에 가까운 값이 된다.
+학습의 결과 인공신경망의 Policy 출력은 현재 게임 상태에서 다음에 둘 수의 확률(<span class="math notranslate">\(p\)</span>; probability)이 되어야 하며,
+Value 출력은 게임 상태가 얼마나 승리상태에 가까운지 [-1, 1]사이 실수(<span class="math notranslate">\(v\)</span>; value)로 평가할 수 있어야 한다.</p>
+<p>학습 데이터 샘플에는 게임상태(<span class="math notranslate">\(s\)</span> ; state), MCTS의 탐색 빈도(<span class="math notranslate">\(\pi\)</span> , 전체 합이 1.이 되도록 변환),
+유효한 수 목록(legal moves), 그리고 게임의 승패(<span class="math notranslate">\(r\)</span> ; reward)가 있어야 한다.
+여기서 <span class="math notranslate">\(\pi\)</span> 는 다음에 둘 수의 확률 <span class="math notranslate">\(p\)</span> 로, 게임의 승패 <span class="math notranslate">\(r\)</span> 은 평가값 <span class="math notranslate">\(v\)</span> 로 볼 수 있다.
+그래서, loss 함수는 <a class="reference internal" href="#equation-loss-function">(1)</a> 같이 정의된다.
+첫 번째 항은 Policy 출력의 loss 이고, 두 번째 항은 Value 출력의 loss 이다. 마지막 항은 과적합을 막기위한 <span class="math notranslate">\(l2\)</span> 값이다.</p>
+<div class="math notranslate" id="equation-loss-function">
+<span class="eqno">(1)<a class="headerlink" href="#equation-loss-function" title="Permalink to this equation">¶</a></span>\[L =  - \pi log p + c_1 (r - v)^2  + c_2 ||\theta||^2\]</div>
+<div class="literal-block-wrapper docutils container" id="id11">
+<span id="training-code"></span><div class="code-block-caption"><span class="caption-text">신경망 학습</span><a class="headerlink" href="#id11" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># optimizer 초기화</span>
+<span class="n">c1</span> <span class="o">=</span> <span class="mf">0.02</span>
+<span class="n">c2</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">current_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">c2</span><span class="p">)</span>
+
+<span class="c1"># 중간 생략 ...</span>
+
+<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+
+   <span class="c1"># 중간 생략 ...</span>
+
+   <span class="c1"># 입력 상태: ob, s</span>
+   <span class="n">prob</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">current_model</span><span class="p">(</span><span class="n">ob</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+   <span class="c1"># 실제 가능한 수에 마스킹을 함</span>
+   <span class="n">prob</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">legal_moves</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">legal_moves</span> <span class="o">*</span> <span class="n">prob</span><span class="p">)</span>
+
+   <span class="c1"># 신경망 가중치 갱신</span>
+   <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+   <span class="n">log_prob</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+   <span class="n">policy_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">pi</span> <span class="o">*</span> <span class="n">log_prob</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+   <span class="n">value_loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">value_pred</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+   <span class="n">loss</span> <span class="o">=</span> <span class="n">policy_loss</span> <span class="o">+</span> <span class="n">value_loss_coef</span> <span class="o">*</span> <span class="n">value_loss</span>
+   <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<p>이것을 실제 코드로 작성하면 <a class="reference internal" href="#training-code"><span class="std std-ref">신경망 학습</span></a> 처럼된다(예제 AI와 다를 수 있음).
+많은 인공신경망 라이브러리는 <span class="math notranslate">\(l2\)</span> 항을 따로 사용하지 않고, optimizer에 인자를 추가하는 식으로 처리한다(4번째 줄 weight_decay).
+Value loss 값은 [-1, 1] 사이 실수이고, 실제 더 커질 가능성도 충분히 있지만, Policy loss값은 [0, 1]범위인데다가 대부분이 0이므로,
+평균적으로 Value loss값이 Policy loss값에 비해 약 50배 정도 크다. 이것을 보정하기위해 <span class="math notranslate">\(c_2\)</span> 값을 0.02를 사용했다.</p>
+</div>
+<div class="section" id="mcts">
+<h2>MCTS<a class="headerlink" href="#mcts" title="제목 주소">¶</a></h2>
+<div class="figure" id="id12" style="width: 600px">
+<span id="self-learning-fig"></span><img alt="_images/self_learning_fig.png" src="_images/self_learning_fig.png" />
+<p class="caption"><span class="caption-text">Self Learning 구조</span></p>
+</div>
+<p><a class="reference internal" href="#self-learning-fig"><span class="std std-ref">Self Learning 구조</span></a> 를 다시 살펴보면 MCTS와 인공신경망이 결합되어 있다.
+게임을 플레이할 때, MCTS는 현재 게임상태에서 어떤 수를 탐색(search)해야할 지 결정할 때,
+선택과 Default Policy에서 인공신경망의 예측을 사용한다.
+기존 MCTS에서는 선택 단계에서 UCB 알고리즘을 사용했는데, Self Learning에서는 그 변종인 PUCT 알고리즘을 사용한다.
+기본적인 사항은 기존 UCB 알고리즘과 같지만, 두 번째 항(탐색)에서 신경망의 Policy 출력(<span class="math notranslate">\(P(s, a)\)</span> )를 사용한다.
+신경망의 출력은 과거 MCTS에서 탐색했던 결과를 반영하고 있으므로,
+과거에 유망했던 것으로 판단했던 수는 현재에도 더 탐색을 하게된다.</p>
+<div class="math notranslate" id="equation-puct">
+<span class="eqno">(2)<a class="headerlink" href="#equation-puct" title="Permalink to this equation">¶</a></span>\[a_t = argmax(Q(s_t, a) + c_{puct} P(s_t, a) \frac{\sqrt{N}}{1 + N_a})\]</div>
+<p>Self Learning에서는 Default policy는 무작위 샘플링으로 상태의 좋고 나쁨을 판단하기 위한 것이었기 때문에,
+이것 대신하여 인공 신경망의 Value 출력을 사용한다.
+Default policy는 시뮬레이션 횟수와 탐색 깊이에 비례하여 시간복잡도가 증가할 뿐만 아니라,
+실제로는 상태노드를 생성하기위해 메모리 할당과 해제가 빈번하게 발생하므로, 많은 경우 꽤 큰 계산비용을 요구한다.
+반면, 인공신경망은 계산비용이 크기는 하지만, 병렬처리가 더 쉽고 고정되어 있기 때문에 훨씬 빠르다.</p>
+<p>MCTS를 사용할 때 시뮬레이션 횟수를 주의해서 정해야 한다.
+MCTS 시뮬레이션 횟수가 크면 학습할 때도 더 높은 성능을 보일 가능성이 있지만, 학습시간이 오래 걸리기 때문에 제한된
+시간동안 성능을 충분히 높이기 어렵다.
+반면 시뮬레이션 횟수가 너무 부족하면 MCTS가 충분히 일관성있는 탐색이 어렵기 때문에 실제 성능이 향상되기 어렵다.
+예제 AI에서는 학습할 때 시뮬레이션 횟수를 500번으로 하였다.</p>
+</div>
+<div class="section" id="id5">
+<h2>결론 및 한계<a class="headerlink" href="#id5" title="제목 주소">¶</a></h2>
+<p>Self Learning으로 학습한 AI는 4일 정도 학습으로두 Stockfish 보다 좋은 성능을 보일 수 있었다.
+단순히 더 오랜시간 학습을 하면 성능을 높일 수 있을 가능성은 있지만, 쉽지는 않다.
+최종 학습결과가 초기 조건(신경망 초기값, Replay Memory 초기 데이터, 등)에 민감하기 때문에 일정수준 이상의 성능향상을 위해서는 더욱 개선이 필요하다.
+현재 예제 AI는 Stockfish Level 5~6 정도까지는 하루 이틀 사이에 안정적으로 학습 가능하고, 8~10정도는 학습을 더 진행하면(약 4일) 학습이 가능하지만,
+그 이상의 성능은 안정적으로 학습하지 못한다.</p>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Silver, David, et al. &quot;Mastering the game of go without human knowledge.&quot; Nature 550.7676 (2017): 354.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Silver, David, et al. &quot;Mastering the game of Go with deep neural networks and tree search.&quot; nature 529.7587 (2016): 484-489</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>Silver, David, et al. &quot;Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm.&quot; arXiv preprint arXiv:1712.01815 (2017).</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">목차</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Self Learning AI</a><ul>
+<li><a class="reference internal" href="#self-learning">Self Learning 알고리즘</a></li>
+<li><a class="reference internal" href="#id4">인공신경망</a></li>
+<li><a class="reference internal" href="#mcts">MCTS</a></li>
+<li><a class="reference internal" href="#id5">결론 및 한계</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>이전 항목</h4>
+  <p class="topless"><a href="04-mcts.html"
+                        title="이전 장">Monte Carlo Tree Search</a></p>
+  <h4>다음 항목</h4>
+  <p class="topless"><a href="scripts.html"
+                        title="다음 장">scripts package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>현재 문서</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/05-self_learning.rst.txt"
+            rel="nofollow">소스 코드를 보려면</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="scripts.html" title="scripts package"
+             >다음</a> |</li>
+        <li class="right" >
+          <a href="04-mcts.html" title="Monte Carlo Tree Search"
+             >이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

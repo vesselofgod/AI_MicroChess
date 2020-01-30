@@ -1,0 +1,364 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>agents.self_learning.mcts &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="../../../genindex.html" />
+    <link rel="search" title="검색" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >모듈 코드</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../agents.html" accesskey="U">agents</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for agents.self_learning.mcts</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Self Learning용 Monte Carlo Tree Search 구현</span>
+
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Hyunsoo Park, Game AI Team, NCSOFT&#39;</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">import</span> <span class="nn">chess</span>
+<span class="kn">import</span> <span class="nn">chess.svg</span>
+<span class="kn">from</span> <span class="nn">torch.autograd</span> <span class="k">import</span> <span class="n">Variable</span>
+
+<span class="kn">from</span> <span class="nn">agents.self_learning</span> <span class="k">import</span> <span class="n">N_ACTIONS</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">encode_observation</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">encode_move</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">decode_move</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">is_castling</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.Node">[문서]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    상태공간 노드</span>
+
+<span class="sd">    Attrs:</span>
+
+<span class="sd">    - (bool) -- turn, white=True, black=False</span>
+<span class="sd">    - (:class:`scripts.run_game.State`) -- state</span>
+<span class="sd">    - (:class:`agents.self_learning.mcts.Node`) -- parent, 이전 상태를 저장하고 있는 노드</span>
+<span class="sd">    - (dict) -- children, dict(key-&gt; chess.Move, value-&gt; Node), 특정 수를 두고 난 뒤의 상태</span>
+<span class="sd">    - (int) -- visits, 이 노드를 방문한 횟수</span>
+<span class="sd">    - (float) -- wins, 이 노드와 자식 노드에서 받은 보상의 총합</span>
+<span class="sd">    - (float) -- ucb, 이 노드의 ucb 값</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;turn&#39;</span><span class="p">,</span> <span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;parent&#39;</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;ucb&#39;</span><span class="p">,</span> <span class="s1">&#39;wins&#39;</span><span class="p">,</span> <span class="s1">&#39;visits&#39;</span><span class="p">,</span> <span class="s1">&#39;prob&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">turn</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="o">=</span> <span class="n">turn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visits</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wins</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ucb</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_turn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">turn</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_tree</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Node.print_tree"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.Node.print_tree">[문서]</a>    <span class="k">def</span> <span class="nf">print_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">move</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        콘솔에 트리 출력</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:: </span><span class="si">{}</span><span class="s1">-&gt; v:</span><span class="si">{}</span><span class="s1"> vl:</span><span class="si">{:.3f}</span><span class="s1"> (</span><span class="si">{:.3f}</span><span class="s1">) u:</span><span class="si">{:.3f}</span><span class="s1"> </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">buff</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">buff</span> <span class="o">+=</span> <span class="s1">&#39;  &#39;</span> <span class="o">*</span> <span class="n">depth</span> <span class="o">+</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;White&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_turn</span> <span class="k">else</span> <span class="s1">&#39;Black&#39;</span><span class="p">,</span>
+                                          <span class="nb">str</span><span class="p">(</span><span class="n">move</span><span class="p">),</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">visits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wins</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">wins</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visits</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">),</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">ucb</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">fen</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">move</span><span class="p">,</span> <span class="n">c_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">buff</span> <span class="o">+=</span> <span class="n">c_node</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">buff</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">fen</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MCTSPlanner"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner">[문서]</a><span class="k">class</span> <span class="nc">MCTSPlanner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MCTS 알고리즘 구현</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">turn</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">,</span> <span class="n">action_score</span><span class="o">=</span><span class="s1">&#39;visits&#39;</span><span class="p">,</span>
+                 <span class="n">cputc</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mirror</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="o">=</span> <span class="n">turn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">max_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_score</span> <span class="o">=</span> <span class="n">action_score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cputc</span> <span class="o">=</span> <span class="n">cputc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span> <span class="o">=</span> <span class="n">mirror</span>
+
+<div class="viewcode-block" id="MCTSPlanner.search"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner.search">[문서]</a>    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">n_simulations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        주어진 상태와 제약조건(시뮬레이션 횟수와 시간제한)동안 시뮬레이션을 하고</span>
+<span class="sd">        찾아낸 가장 좋은 수을 반환함</span>
+
+<span class="sd">        :param State state: 현재 게임 상태</span>
+<span class="sd">        :param int n_simulations: 최대 시뮬레이션 횟수</span>
+<span class="sd">        :param int tau:</span>
+<span class="sd">        :param int timeout: 시간제한 (sec.)</span>
+<span class="sd">        :return: (chess.Move) -- 가장 좋은 수</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="c1"># 이전에 탐색한 결과를 저장해 두고, 트리의 일부를 재사용</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v0</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">v0</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;# of nodes reuse: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v0</span><span class="o">.</span><span class="n">visits</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">prob</span><span class="p">,</span> <span class="n">current_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">v0</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">simulation_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+            <span class="k">if</span> <span class="n">simulation_count</span> <span class="o">&gt;</span> <span class="n">n_simulations</span> <span class="ow">or</span> <span class="n">elapsed_time</span> <span class="o">&gt;</span> <span class="mf">0.99</span> <span class="o">*</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="c1"># 제약조건을 초과하면 바로 시뮬레이션 종료</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;White&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="k">else</span> <span class="s1">&#39;Black&#39;</span>
+                <span class="n">simulation_per_sec</span> <span class="o">=</span> <span class="n">simulation_count</span> <span class="o">/</span> <span class="n">elapsed_time</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: Simulation speed: </span><span class="si">{:,.1f}</span><span class="s1"> (# of simulations: </span><span class="si">{:,}</span><span class="s1">, elapsed </span><span class="si">{:.1f}</span><span class="s1"> sec.)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">color</span><span class="p">,</span> <span class="n">simulation_per_sec</span><span class="p">,</span> <span class="n">simulation_count</span><span class="p">,</span> <span class="n">elapsed_time</span><span class="p">))</span>
+                <span class="k">break</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># 선택 및 확장</span>
+            <span class="n">vl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree_policy</span><span class="p">(</span><span class="n">v0</span><span class="p">)</span>
+            <span class="c1"># Monte-Carlo 시뮬레이션(default policy) 생략</span>
+            <span class="c1">#  --&gt; tree_policy에서 인공신경망으로 대체</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">vl</span><span class="o">.</span><span class="n">wins</span>
+            <span class="c1"># 보상 역전파</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backup</span><span class="p">(</span><span class="n">vl</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+            <span class="n">simulation_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">tau</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_action</span><span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_action</span><span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MCTSPlanner.tree_policy"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner.tree_policy">[문서]</a>    <span class="k">def</span> <span class="nf">tree_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        선택 및 확장 단계</span>
+
+<span class="sd">        :param agents.self_learning.mcts.Node node: 현재 노드 v0</span>
+<span class="sd">        :return: (Node) -- 생성한 트리의 종단노드 vl</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">is_game_over</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
+            <span class="n">untried</span> <span class="o">=</span> <span class="p">[</span><span class="n">chess</span><span class="o">.</span><span class="n">Move</span><span class="p">(</span><span class="n">move</span><span class="o">.</span><span class="n">from_square</span><span class="p">,</span> <span class="n">move</span><span class="o">.</span><span class="n">to_square</span><span class="p">)</span> <span class="k">for</span> <span class="n">move</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">legal_moves</span>
+                       <span class="k">if</span> <span class="n">move</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="n">untried</span><span class="p">:</span>
+                <span class="c1"># 아직 시도해 보지 않은 수가 있다면 한번이라도 시도해봐야 함</span>
+
+                <span class="c1"># 무작위 선택</span>
+                <span class="n">selected</span> <span class="o">=</span> <span class="n">untried</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">untried</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="c1"># 확장</span>
+                <span class="n">next_state</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">next_turn</span><span class="p">,</span> <span class="n">next_state</span><span class="p">)</span>
+                <span class="c1"># 인공신경망으로 행동 선택 확률과 현재 상태의 가치를 예측</span>
+                <span class="n">prob</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">wins</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">visits</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">selected</span><span class="p">]</span> <span class="o">=</span> <span class="n">child</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">node</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">child</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># UCB 값 계산 및 선택</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="c1"># [탐색] epsilon 값에 따라 무작위 행동 선택</span>
+                        <span class="n">eps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span>
+                        <span class="n">nu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">dirichlet</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># [활용] 최선의 행동을 선택</span>
+                        <span class="n">eps</span> <span class="o">=</span> <span class="mf">0.</span>
+                        <span class="n">nu</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+                    <span class="n">Q</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">wins</span> <span class="o">/</span> <span class="n">child</span><span class="o">.</span><span class="n">visits</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cputc</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">prob</span><span class="p">[</span><span class="n">encode_move</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">)]</span>
+                    <span class="n">U</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">eps</span><span class="p">)</span><span class="o">*</span><span class="n">p</span> <span class="o">+</span> <span class="n">eps</span><span class="o">*</span><span class="n">nu</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">visits</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">child</span><span class="o">.</span><span class="n">visits</span><span class="p">)</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">)</span>
+                    <span class="n">child</span><span class="o">.</span><span class="n">ucb</span> <span class="o">=</span> <span class="p">(</span><span class="n">Q</span> <span class="o">+</span> <span class="n">U</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;ucb&#39;</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">memory</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_depth</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">node</span></div>
+
+<div class="viewcode-block" id="MCTSPlanner.predict"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner.predict">[문서]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">board_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        인공신경망을 이용해 현재 상태에서 가능한 수들의 선택 확률과 가치를 예측함</span>
+<span class="sd">        </span>
+<span class="sd">        :param State board_state:</span>
+<span class="sd">        :return: (torch.Tensor, torch.Tensor) -- move_prob, value</span>
+<span class="sd">           - move_prob: torch.Tensor, 가능한 수들의 선택 확률</span>
+<span class="sd">           - value: torch.Tensor, 현재 상태의 가치</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observation</span> <span class="o">=</span> <span class="n">encode_observation</span><span class="p">(</span><span class="n">board_state</span><span class="o">.</span><span class="n">fen</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+        <span class="n">observation</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">board_state</span><span class="o">.</span><span class="n">turn</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="ow">not</span> <span class="n">board_state</span><span class="o">.</span><span class="n">turn</span><span class="p">)]</span> <span class="o">+</span> <span class="n">is_castling</span><span class="p">(</span><span class="n">board_state</span><span class="p">,</span> <span class="n">board_state</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">))</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">moves_logits</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">observation</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">state</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="n">move_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_ACTIONS</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">move</span> <span class="ow">in</span> <span class="n">board_state</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">:</span>
+            <span class="n">move_mask</span><span class="p">[</span><span class="n">encode_move</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">board_state</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">move_mask</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">move_mask</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">moves_logits</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">move_mask</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">move_mask</span> <span class="o">*</span> <span class="n">moves_logits</span><span class="p">)</span>  <span class="c1"># non-legal moves ~ -100</span>
+        <span class="n">move_prob</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">moves_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">move_prob</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">value</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MCTSPlanner.backup"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner.backup">[문서]</a>    <span class="k">def</span> <span class="nf">backup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        시뮬레이션 결과 업데이트</span>
+<span class="sd">        턴마다 Negamax 스타일로 보상의 부호를 바꿈,</span>
+<span class="sd">        보상구간 [-1, 1]을 가정함</span>
+
+<span class="sd">        :param agents.self_learning.mcts.Node node: 탐색한 트리의 종단노드</span>
+<span class="sd">        :param float delta: 시뮬레이션으로 알아낸 보상</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">turn</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="p">:</span>
+            <span class="c1"># Negamax: 상대방의 순서에서 종료되었을 때</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span>
+
+        <span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># 자식 상태부터 현재까지 보상값, 방문횟수 누적</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">wins</span> <span class="o">+=</span> <span class="n">delta</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">visits</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span>
+            <span class="c1"># Negamax</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span></div>
+
+<div class="viewcode-block" id="MCTSPlanner.best_action"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner.best_action">[문서]</a>    <span class="k">def</span> <span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        현재 노드에서 가장 좋은 행동을 결정하여 반환함</span>
+
+<span class="sd">        :param agents.self_learning.mcts.Node node: 현재 상태 노드 v0</span>
+<span class="sd">        :param bool deterministic: 결정적으로 행동을 선택(True)할 것인지 확률적으로 선택(False)할 것인지 여부</span>
+<span class="sd">        :return: (chess.Move) -- 가장 좋은 행동</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">deterministic</span><span class="p">:</span>
+            <span class="c1"># 가장 pi 값이 높은 행동 선택</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">move_code</span> <span class="o">=</span> <span class="n">pi</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># 확률적으로 선택</span>
+            <span class="n">move_code</span> <span class="o">=</span> <span class="n">pi</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">decode_move</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">move_code</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">),</span> <span class="n">pi</span></div>
+
+<div class="viewcode-block" id="MCTSPlanner.pi"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.mcts.MCTSPlanner.pi">[문서]</a>    <span class="k">def</span> <span class="nf">pi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">tau</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        현재 상태 노드에서 pi 값을 계산함</span>
+<span class="sd">        </span>
+<span class="sd">        :param agents.self_learning.mcts.Node node:</span>
+<span class="sd">        :param int tau:</span>
+<span class="sd">        :return: (torch.Tensor[400]) -- 현재 노드에서 시뮬레이션 했던 모든 행동들을 확률 값으로 변환함</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_ACTIONS</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">move</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">pi</span><span class="p">[</span><span class="n">encode_move</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">visits</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">tau</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">pi</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >모듈 코드</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../agents.html" >agents</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

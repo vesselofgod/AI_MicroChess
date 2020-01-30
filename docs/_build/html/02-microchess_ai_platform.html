@@ -1,0 +1,408 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Microchess AI 플랫폼 &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="genindex.html" />
+    <link rel="search" title="검색" href="search.html" />
+    <link rel="next" title="기본 AI 예제" href="03-basic_ai_examples.html" />
+    <link rel="prev" title="Microchess AI 경진대회" href="01-microchess_ai_competition.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="03-basic_ai_examples.html" title="기본 AI 예제"
+             accesskey="N">다음</a> |</li>
+        <li class="right" >
+          <a href="01-microchess_ai_competition.html" title="Microchess AI 경진대회"
+             accesskey="P">이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="microchess-ai">
+<h1>Microchess AI 플랫폼<a class="headerlink" href="#microchess-ai" title="제목 주소">¶</a></h1>
+<div class="section" id="id1">
+<h2>개요<a class="headerlink" href="#id1" title="제목 주소">¶</a></h2>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Microchess 플랫폼 구현</dt>
+<dd><ul class="first last">
+<li>일반 체스 플랫폼인 python-chess <a class="footnote-reference" href="#id7" id="id2">[1]</a> 을 수정하여 구현</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Python으로 AI를 작성할 수 있는 기반을 제공함</li>
+<li><dl class="first docutils">
+<dt>주요 AI 예제 네 가지 제공</dt>
+<dd><ul class="first last">
+<li>Random AI, 탐색 기반 AI, MCTS AI, Self Learning AI</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>사람과 AI 체스 플레이 가능한 인터페이스 제공</li>
+<li><dl class="first docutils">
+<dt>개발 및 테스트 환경</dt>
+<dd><ul class="first last">
+<li>python 3.5 (anaconda)</li>
+<li>Windows 10</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>다른 python 버전이나, 배포판, 다른 OS 에서 심각한 문제가 발생할 가능성은 적지만,
+이 문서는 위 환경을 기준으로 작성되었다.</p>
+</div>
+<div class="section" id="id3">
+<h2>디렉토리 구조<a class="headerlink" href="#id3" title="제목 주소">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>MicrochessAICompetition
+ ├── chess: Microchess 용으로 수정한 python-chess
+ ├── scripts: 실행 스크립트 및 기타 파일
+ └── agents
+         ├── basic: 기본 AI 예제
+         ├── search: 탐색 기반 AI, MCTS 예제
+         ├── self_learning: 학습 AI 예제
+         └── stockfish: 다른 언어로 구현된 AI 사용 예제
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>설치방법<a class="headerlink" href="#id4" title="제목 주소">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">플랫폼 다운로드 및 압축해제</p>
+</li>
+<li><p class="first">anaconda 다운로드 및 설치 (<a class="reference external" href="https://www.anaconda.com/download/">https://www.anaconda.com/download/</a>)</p>
+</li>
+<li><p class="first">가상환경 생성 및 활성화:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(base) C:\Users\user\MicrochessAICompetition&gt; conda create –n mchess python=3.5
+(base) C:\Users\user\MicrochessAICompetition&gt; activate mchess
+(mchess) C:\Users\user\MicrochessAICompetition&gt;
+</pre></div>
+</div>
+</li>
+<li><p class="first">주요 모듈 설치:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">ipython</span> <span class="n">tqdm</span> <span class="n">pyyaml</span> <span class="n">mkl</span> <span class="n">matplotlib</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">CogSci</span> <span class="n">pygame</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">sqlitedict</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">visdom</span>  <span class="c1"># visdom 설치</span>
+<span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">peterjc123</span> <span class="n">pytorch</span><span class="o">-</span><span class="n">cpu</span><span class="o">=</span><span class="mf">0.3</span><span class="o">.</span><span class="mi">0</span>  <span class="c1"># pytorch 설치 (CPU, Windows 용)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>visdom은 AI 디버깅 및 데이터 시각화 용으로 사용함</dt>
+<dd><ul class="first last">
+<li>MCTS AI와 Self Learning AI에서 사용</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>pytorch는 비공식 Windows + CPU 버전(<a class="reference external" href="https://github.com/peterjc123/pytorch-scripts">https://github.com/peterjc123/pytorch-scripts</a>) 사용</dt>
+<dd><ul class="first last">
+<li>최신 버전인 0.4.0 버전은 정식으로 Windows를 지원하지만, 개발에 사용한 0.3.1 버전은 정식으로 Windows를 지원되지 않음</li>
+<li>0.3.1 버전과 0.4.0 버전의 대부분은 호환되지만, 0.4.0을 이 플랫폼에서 검증하지 못했음</li>
+<li>CUDA 지원버전을 사용할 수 있지만, CUDA 사용가능한 부분이 적어서 속도향상이 크지 않고, 학습 성능 검증이 부족함</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2>실행 방법<a class="headerlink" href="#id5" title="제목 주소">¶</a></h2>
+<p>예제 AI 실행</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Random AI vs. One Step Search AI</dt>
+<dd><ul class="first last">
+<li>Random AI 위치: agents/basic/random_agent.py</li>
+<li>One Step Search AI: agents/search/bruteforce_search_agent.py</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">random_agent</span><span class="o">.</span><span class="n">RandomAgent</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">bruteforce_search_agent</span><span class="o">.</span><span class="n">OneStepSearchAgent</span>
+</pre></div>
+</div>
+<div class="figure" id="id9">
+<span id="fen-example"></span><img alt="_images/execution-cmd.png" src="_images/execution-cmd.png" />
+<p class="caption"><span class="caption-text">fen <a class="footnote-reference" href="#id8" id="id6">[2]</a> 표기법으로 보드 상태 출력</span></p>
+</div>
+<ul class="simple">
+<li>Jupyter qtconsole 에서 실행</li>
+</ul>
+<div class="code ipython highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">jupyter</span> <span class="n">qtconsole</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="o">%</span><span class="n">run</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">random_agent</span><span class="o">.</span><span class="n">RandomAgent</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">se</span> <span class="n">arch</span><span class="o">.</span><span class="n">bruteforce_search_agent</span><span class="o">.</span><span class="n">OneStepSearchAgent</span>
+</pre></div>
+</div>
+<div class="figure" id="id10">
+<span id="qt-console-example"></span><img alt="_images/execution-qtconsole.png" src="_images/execution-qtconsole.png" />
+<p class="caption"><span class="caption-text">Qt Console 화면</span></p>
+</div>
+<p><strong>Random AI vs. Random AI</strong></p>
+<p>AI끼리 게임을 플레이할 때는 scripts/run_game.py 을 사용한다. 두 Random AI끼리 플레이할 때는 다음과 같이 실행한다.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">random_agent</span><span class="o">.</span><span class="n">RandomAgent</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">random_agent</span><span class="o">.</span><span class="n">RandomAgent</span>
+</pre></div>
+</div>
+<p>White와 black에 AI의 경로를 지정해 주면 게임을 실행하고, 결과를 출력해 준다.</p>
+<p>예제 AI는 AI의 경로를 run_game.py의 agents에 미리 저장해 두었기 때문에, 전체 경로를 지정할 필요없이 다음과 같이 짧은 이름으로 실행 가능하다.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">random</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">random</span>
+</pre></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id11">
+<div class="code-block-caption"><span class="caption-text">예제 AI의 이름과 경로</span><a class="headerlink" href="#id11" title="Permalink to this code">¶</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">agents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">human</span><span class="o">=</span><span class="s1">&#39;agents.basic.human.Player&#39;</span><span class="p">,</span>
+        <span class="n">malfunction</span><span class="o">=</span><span class="s1">&#39;agents.basic.debug_agent.MalfunctionAgent&#39;</span><span class="p">,</span>
+        <span class="n">first_move</span><span class="o">=</span><span class="s1">&#39;agents.basic.debug_agent.FirstMoveAgent&#39;</span><span class="p">,</span>
+        <span class="n">random</span><span class="o">=</span><span class="s1">&#39;agents.basic.random_agent.RandomAgent&#39;</span><span class="p">,</span>
+        <span class="n">one_step_search</span><span class="o">=</span><span class="s1">&#39;agents.search.one_step_search_agent.OneStepSearchAgent&#39;</span><span class="p">,</span>
+        <span class="n">two_step_search</span><span class="o">=</span><span class="s1">&#39;agents.search.two_step_search_agent.TwoStepSearchAgent&#39;</span><span class="p">,</span>
+        <span class="n">greedy</span><span class="o">=</span><span class="s1">&#39;agents.search.two_step_search_agent.TwoStepSearchAgent&#39;</span><span class="p">,</span>
+        <span class="n">negamax</span><span class="o">=</span><span class="s1">&#39;agents.search.negamax_search_agent.NegamaxSearchAgent&#39;</span><span class="p">,</span>
+        <span class="n">abp_negamax</span><span class="o">=</span><span class="s1">&#39;agents.search.abp_negamax_search_agent.ABPNegamaxSearchAgent&#39;</span><span class="p">,</span>
+        <span class="n">mcts</span><span class="o">=</span><span class="s1">&#39;agents.search.mcts_agent.MCTSAgent&#39;</span><span class="p">,</span>
+        <span class="n">mcts_dev</span><span class="o">=</span><span class="s1">&#39;agents.search.mcts_agent.MCTSAgentDev&#39;</span><span class="p">,</span>
+        <span class="n">self_learning</span><span class="o">=</span><span class="s1">&#39;agents.self_learning.agent.Agent&#39;</span><span class="p">,</span>
+        <span class="n">stockfish</span><span class="o">=</span><span class="s1">&#39;agents.stockfish.agent.Stockfish&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Random AI와 One Step Search AI의 게임은 다음과 같이 실행 가능하다.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">random</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">one_step_search</span>
+</pre></div>
+</div>
+<p>One Step AI는 다음 수의 결과를 고려하는 간단한 AI이다. 강력하지는 않지만, Random AI는 쉽게 이길 수 있다.
+실행한 결과는 다음과 같이 나타난다.</p>
+<div class="highlight-none notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31</pre></div></td><td class="code"><div class="highlight"><pre><span></span>[2018-04-23 15:40:07,079 DEBUG] White: agents.basic.random_agent.RandomAgent-True
+[2018-04-23 15:40:07,079 DEBUG] White: board value 0.500
+&lt;IPython.core.display.SVG object&gt;
+k n b r
+p . . .
+. . . .
+. . . P
+R B N K
+[2018-04-23 15:40:07,093 DEBUG] White: 400.0 sec. remain
+[2018-04-23 15:40:07,093 DEBUG] White: move b1d3
+[2018-04-23 15:40:07,093 DEBUG] 8/8/8/knbr4/p7/3B4/3P4/R1NK4 b Kk - 1 1
+...  (생략)
+[2018-04-23 15:30:05,171 DEBUG] White: move d2c1
+[2018-04-23 15:30:05,172 DEBUG] 8/8/8/8/3k4/8/8/2K5 b - - 0 37
+[2018-04-23 15:30:05,172 DEBUG] [0.5, 0.5]
+[2018-04-23 15:30:05,172 DEBUG] draw
+&lt;IPython.core.display.SVG object&gt;
+. . . .
+. . . k
+. . . .
+. . . .
+. . K .
+[2018-04-23 15:30:05,178 DEBUG] Score: [0.500 0.500]
+[2018-04-23 15:30:05,178 DEBUG] turns: 72
+[2018-04-23 15:30:05,178 DEBUG] Game end: True
+[2018-04-23 15:30:05,179 DEBUG] checkmate: False
+[2018-04-23 15:30:05,179 DEBUG] Stalemate: False
+[2018-04-23 15:30:05,179 DEBUG] Insufficient material: True
+[2018-04-23 15:30:05,179 DEBUG] 57 moves: False
+[2018-04-23 15:30:05,179 DEBUG] 5-fold: False
+[2018-04-23 15:30:05,179 DEBUG] Draw: [0.5, 0.5]
+</pre></div>
+</td></tr></table></div>
+<p>4~8번째 줄 처럼 매 턴마다, 게임 상태를 텍스트 상태로 출력한다. white는 대문자로 표시하고, black은 소문자로 표시한다.</p>
+<p>23번째 줄부터 게임 결과를 출력한 것이다. Score의 첫번째 숫자는 white의 점수를 나타내고, 두 번째 숫자는 black의 점수를 나타낸다.
+(특별한 경우가 아니면 플랫폼의 나머지 부분에서도 white를 black보다 먼저 출력함)
+게임에 승리하면 1.0, 패배하면 0.0, 그리고 비기면 0.5점을 얻는다.</p>
+<p>일반 Chess (Microchess 포함)와 달리 이 플랫폼에서는 승패가 결정되지 않으면,
+게임이 종료되었을 때 남아있는 기물의 점수를 계산하여 최종 승패를 판단한다.
+따라서, 기존 무승부 조건을 만족한 상태에서 기물의 점수도 동일한 경우만 무승부가 가능하다.</p>
+<p>turns는 전체 게임의 턴 수를 보여주고, 그 다음 줄의 game end는 게임이 정상적으로 종료되었는지 여부를 알려준다.
+그 다음부터는 게임이 종료된 이유(checkmate, stalemate, 등)를 알려준다.</p>
+<p>AI 끼리의 성능을 평가할 때는 benchmark 옵션을 사용한다. benchmark 옵션을 사용하면, 지정된 white와 black 옵션과 상관없이
+총 20게임 (지정된 white와 black으로 10게임, white와 black을 뒤집어서 10게임)을 플레이하고 전체 승률을 출력해준다.</p>
+<p><strong>Random AI vs. One Step Search AI</strong></p>
+<p>Random AI와 One Step Search AI의 성능을 비교하려면 다음과 같이 실행한다.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">random</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">one_step_search</span> <span class="o">--</span><span class="n">benchmark</span>
+</pre></div>
+</div>
+<p>실행 결과는 다음과 같이 나타난다.</p>
+<div class="highlight-none notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span>[2018-04-23 15:52:19,247 INFO]          random          |    one_step_search
+[2018-04-23 15:52:19,247 INFO] W                  0.000 | B                  1.000
+[2018-04-23 15:52:19,247 INFO] W                  0.500 | B                  0.500
+... (생략)
+[2018-04-23 15:52:19,248 INFO] B                  1.000 | W                  0.000
+[2018-04-23 15:52:19,248 INFO] B                  0.000 | W                  1.000
+[2018-04-23 15:52:19,248 INFO] random (White): 0.300 vs. one_step_search (Black): 0.700
+[2018-04-23 15:52:19,249 INFO] random (Black): 0.350 vs. one_step_search (White): 0.650
+[2018-04-23 15:52:19,250 INFO] random: 0.325 vs. one_step_search: 0.675
+</pre></div>
+</td></tr></table></div>
+<p>7번째 줄 까지는 두 AI가 얻은 점수를 보여주고, 마지막 세 줄은 그 평균을 보여준다.
+두 AI가 각각 White/Black 그리고 Black/White인 경우의 평균을 따로 보여주고, 마지막으로 둘을 통합한 평균을 보여준다.
+이 결과에서는 One Step Search AI가 평균 0.675점을 얻어 더 좋은 성능을 보여주고 있다.</p>
+</div>
+<div class="section" id="vs-ai">
+<h2>인간 플레이어 vs. AI 인터페이스<a class="headerlink" href="#vs-ai" title="제목 주소">¶</a></h2>
+<p>AI 성능 테스트 용으로 게임 플레이 인터페이스 제공한다. AI의 경로를 입력하는 부분에 human이라고 쓰면, AI와 동일한 방식으로 실행할 수 있다.
+인간 플레이어로 게임을 실행하면, <a class="reference internal" href="#human-play-interface"><span class="std std-ref">인간 플레이어 인터페이스</span></a> 가 나타나고, 플레이어의 순서에 마우스로 조작이 가능해진다.</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">mchess</span><span class="p">)</span> <span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">user</span>\<span class="n">MicrochessAICompetition</span><span class="o">&gt;</span> <span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">run_game</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">white</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">random_agent</span><span class="o">.</span><span class="n">RandomAgent</span> <span class="o">--</span><span class="n">black</span><span class="o">=</span><span class="n">agents</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">human</span><span class="o">.</span><span class="n">Player</span>
+</pre></div>
+</div>
+<div class="figure" id="id12">
+<span id="human-play-interface"></span><a class="reference internal image-reference" href="_images/microchess-human.png"><img alt="_images/microchess-human.png" src="_images/microchess-human.png" style="height: 300px;" /></a>
+<p class="caption"><span class="caption-text">인간 플레이어 인터페이스</span></p>
+</div>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td><a class="reference external" href="https://github.com/niklasf/python-chess">https://github.com/niklasf/python-chess</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[2]</a></td><td><a class="reference external" href="https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation">https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">목차</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Microchess AI 플랫폼</a><ul>
+<li><a class="reference internal" href="#id1">개요</a></li>
+<li><a class="reference internal" href="#id3">디렉토리 구조</a></li>
+<li><a class="reference internal" href="#id4">설치방법</a></li>
+<li><a class="reference internal" href="#id5">실행 방법</a></li>
+<li><a class="reference internal" href="#vs-ai">인간 플레이어 vs. AI 인터페이스</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>이전 항목</h4>
+  <p class="topless"><a href="01-microchess_ai_competition.html"
+                        title="이전 장">Microchess AI 경진대회</a></p>
+  <h4>다음 항목</h4>
+  <p class="topless"><a href="03-basic_ai_examples.html"
+                        title="다음 장">기본 AI 예제</a></p>
+  <div role="note" aria-label="source link">
+    <h3>현재 문서</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/02-microchess_ai_platform.rst.txt"
+            rel="nofollow">소스 코드를 보려면</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="right" >
+          <a href="03-basic_ai_examples.html" title="기본 AI 예제"
+             >다음</a> |</li>
+        <li class="right" >
+          <a href="01-microchess_ai_competition.html" title="Microchess AI 경진대회"
+             >이전</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>

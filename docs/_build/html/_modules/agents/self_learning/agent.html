@@ -1,0 +1,784 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>agents.self_learning.agent &#8212; Microchess AI Competition 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/translations.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="색인" href="../../../genindex.html" />
+    <link rel="search" title="검색" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="전체 색인"
+             accesskey="I">색인</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >모듈 코드</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../agents.html" accesskey="U">agents</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for agents.self_learning.agent</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Self Learning AI</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Hyunsoo Park, Game AI Team, NCSOFT&#39;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">queue</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">import</span> <span class="nn">torch.optim</span> <span class="k">as</span> <span class="nn">optim</span>
+<span class="kn">import</span> <span class="nn">torch.multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">chess</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">trange</span>
+<span class="kn">from</span> <span class="nn">torch.autograd</span> <span class="k">import</span> <span class="n">Variable</span>
+
+<span class="kn">from</span> <span class="nn">agents</span> <span class="k">import</span> <span class="n">BaseAgent</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.memory</span> <span class="k">import</span> <span class="n">ReplayMemory</span>
+<span class="kn">from</span> <span class="nn">scripts.run_game</span> <span class="k">import</span> <span class="n">Environment</span>
+<span class="kn">from</span> <span class="nn">scripts.utils</span> <span class="k">import</span> <span class="n">ascii_plot</span>
+<span class="kn">from</span> <span class="nn">agents.search.two_step_search_agent</span> <span class="k">import</span> <span class="n">TwoStepSearchAgent</span>
+<span class="kn">from</span> <span class="nn">agents.stockfish.agent</span> <span class="k">import</span> <span class="n">Stockfish</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.models</span> <span class="k">import</span> <span class="n">L1024r</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.models</span> <span class="k">import</span> <span class="n">C64r6L1024r</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.arguments</span> <span class="k">import</span> <span class="n">get_args</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">encode_observation</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">encode_move</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">is_castling</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">Buffer</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">Record</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.utils</span> <span class="k">import</span> <span class="n">Operators</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning.mcts</span> <span class="k">import</span> <span class="n">MCTSPlanner</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning</span> <span class="k">import</span> <span class="n">OBSERVATION_SHAPE</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning</span> <span class="k">import</span> <span class="n">LEN_STATE</span>
+<span class="kn">from</span> <span class="nn">agents.self_learning</span> <span class="k">import</span> <span class="n">N_ACTIONS</span>
+
+<span class="c1"># 시간절약을 위해 여러 게임을 동시에 실행시킬 것이기 때문에</span>
+<span class="c1"># 선형대수 라이브러리들이 싱글 쓰레드로만 작동하도록 설정함</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;OMP_NUM_THREADS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>  <span class="c1"># OpenMP single thread 실행</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MKL_NUM_THREADS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>  <span class="c1"># Intel MKL single thread 실행</span>
+
+<span class="c1"># 학습률 튜닝용</span>
+<span class="n">CMD_BUFFER</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="n">CMD_QUEUE</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Agent"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.Agent">[문서]</a><span class="k">class</span> <span class="nc">Agent</span><span class="p">(</span><span class="n">BaseAgent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Self Learning AI</span>
+
+<span class="sd">    초기 속성은 eval 모드에서 사용할 값으로 설정되어 있음</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">model_cls</span> <span class="o">=</span> <span class="n">C64r6L1024r</span>
+    <span class="n">model_file</span> <span class="o">=</span> <span class="s1">&#39;models/C64r6L1024r/v1/best.pt&#39;</span>
+    <span class="n">max_depth</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">n_simulations</span> <span class="o">=</span> <span class="mi">100000</span>
+
+    <span class="n">cputc</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">mirror</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">planner</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Agent.set_params"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.Agent.set_params">[문서]</a>    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">,</span> <span class="n">n_simulations</span><span class="p">,</span> <span class="n">cputc</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">mirror</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        AI의 초기화 작업은 reset 에서 실행하지만, 편의 목적으로 일부 값은 set_params 에서 설정함</span>
+<span class="sd">        set_params 는 reset 이전에 호출되어야 함</span>
+
+<span class="sd">        :param torch.nn model: 인공신경망(policy + value net)</span>
+<span class="sd">        :param int max_depth: MCTS 최대 탐색 깊이</span>
+<span class="sd">        :param int n_simulations: MCTS 시뮬레이션 횟수</span>
+<span class="sd">        :param float cputc: MCTS, UCB 공식에서 U의 가중치 c (cU+Q)S</span>
+<span class="sd">        :param float epsilon: MCTS, UCB 공식에서 탐색 가중치</span>
+<span class="sd">        :param float alpha: MCTS, UCB 공식에서 활용 가중치</span>
+<span class="sd">        :param bool mirror:</span>
+<span class="sd">            True일 때는 학습 AI가 흑과 백의 데이터를 모두 학습에 사용함</span>
+<span class="sd">            현재 자신과 다른 색깔일때는 판을 180도 회전하여 학습 데이터로 사용</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">max_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_simulations</span> <span class="o">=</span> <span class="n">n_simulations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cputc</span> <span class="o">=</span> <span class="n">cputc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mirror</span> <span class="o">=</span> <span class="n">mirror</span></div>
+
+<div class="viewcode-block" id="Agent.reset"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.Agent.reset">[문서]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">visualize_tree</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param bool load_model:</span>
+<span class="sd">           학습한 모델을 로드할 지 여부, 학습할 때는 False 로 하고,</span>
+<span class="sd">           평가할 때는 기본 값 True 사용함</span>
+<span class="sd">        :param bool visualize_tree:</span>
+<span class="sd">           MCTS 시각화 기능을 사용하는지 여부, 학습할 때는 False, 평가할 때는 True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">load_model</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_cls</span><span class="p">(</span><span class="n">OBSERVATION_SHAPE</span><span class="p">,</span> <span class="n">LEN_STATE</span><span class="p">,</span> <span class="n">N_ACTIONS</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_file</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">planner</span> <span class="o">=</span> <span class="n">MCTSPlanner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span>
+                                   <span class="n">max_depth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                                   <span class="n">cputc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                   <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span>
+                                   <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+                                   <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                                   <span class="n">mirror</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Agent.act"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.Agent.act">[문서]</a>    <span class="k">def</span> <span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">include_pi</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param scripts.run_game.State state: 현재 게임 상태</span>
+<span class="sd">        :param bool include_pi:</span>
+<span class="sd">            다음 수와 pi를 같이 반환할지 여부</span>
+<span class="sd">            True일 때는 pi를 같이 반환함</span>
+<span class="sd">        :param int tau:</span>
+<span class="sd">            몇 번째 수 까지 탐색을 할 것인지 [0, n]</span>
+<span class="sd">            0 일 때는 탐색을 하지 않음 (평가, 테스트)</span>
+<span class="sd">            0 이상일 때는 정해진 확률에 따라 무작위로 다음 수를 선택함 (학습)</span>
+<span class="sd">        :return: (int, np.array[1, 400]) -- move, pi</span>
+
+<span class="sd">           - move: [0, 399] 사이의 정수, 탐색을 하지 않는다면, 가장 pi값이 높은 행동을 선택함</span>
+<span class="sd">           - pi: 1 x 400 실수 행렬, 모든 행동에 대한 MCTS의 탐색 빈도를 정규화</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">tau</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="n">move</span><span class="p">,</span> <span class="n">pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planner</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">n_simulations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span> <span class="k">if</span> <span class="n">include_pi</span> <span class="k">else</span> <span class="n">move</span></div>
+
+<div class="viewcode-block" id="Agent.close"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.Agent.close">[문서]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Sample"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.Sample">[문서]</a><span class="k">class</span> <span class="nc">Sample</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    데이터 샘플 저장 용</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;observation&#39;</span><span class="p">,</span> <span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;move&#39;</span><span class="p">,</span> <span class="s1">&#39;pi&#39;</span><span class="p">,</span> <span class="s1">&#39;reward&#39;</span><span class="p">,</span> <span class="s1">&#39;done&#39;</span><span class="p">,</span> <span class="s1">&#39;legal_moves&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">move</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">legal_moves</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation</span> <span class="o">=</span> <span class="n">observation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move</span> <span class="o">=</span> <span class="n">move</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">=</span> <span class="n">pi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="n">done</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legal_moves</span> <span class="o">=</span> <span class="n">legal_moves</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="play_game"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.play_game">[문서]</a><span class="k">def</span> <span class="nf">play_game</span><span class="p">(</span><span class="n">inqueue</span><span class="p">,</span> <span class="n">outqueue</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    종료되지 않고 무한 루프로 실행,</span>
+<span class="sd">    inqueue 에서 다음 인자를 받아서, outqueue로 반환</span>
+
+<span class="sd">    :param inqueue:</span>
+<span class="sd">        - (Agent) -- white, white AI</span>
+<span class="sd">        - (Agent) -- black, black AI</span>
+<span class="sd">        - (float) -- turns_until_tau0, 탐색 횟수 (tau)</span>
+<span class="sd">        - (int) -- max_turn, 최대 턴 (default: 80)</span>
+<span class="sd">        - (bool) -- mirror</span>
+<span class="sd">        - (bool) -- reversed_reward, 학습 AI가 black 일 때 True 설정</span>
+<span class="sd">    :param outqueue:</span>
+<span class="sd">        - (float) -- reward</span>
+<span class="sd">        - (bool) -- turn</span>
+<span class="sd">        - (list) -- short_term_memory</span>
+<span class="sd">    :param int seed: worker 를 이 seed 값으로 초기화, worker 는 모두 다른 seed 값으로 초기화 해야 함</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">white</span><span class="p">,</span> <span class="n">black</span><span class="p">,</span> <span class="n">turns_until_tau0</span><span class="p">,</span> <span class="n">max_turn</span><span class="p">,</span> <span class="n">mirror</span><span class="p">,</span> <span class="n">reverse_reward</span> <span class="o">=</span> <span class="n">inqueue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+
+            <span class="n">agents</span> <span class="o">=</span> <span class="p">[</span><span class="n">white</span><span class="p">,</span> <span class="n">black</span><span class="p">]</span>
+            <span class="n">short_term_memory</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Agent</span><span class="p">:</span>
+                    <span class="n">agent</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">load_model</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">visualize_tree</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">agent</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+            <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">human_play</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="n">remaining_time</span> <span class="o">=</span> <span class="p">[</span><span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_turn</span><span class="p">):</span>
+                <span class="n">agent</span> <span class="o">=</span> <span class="n">agents</span><span class="p">[</span><span class="n">turn</span> <span class="o">%</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">white_remain_sec</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">remaining_time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">black_remain_sec</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">remaining_time</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Agent</span><span class="p">:</span>
+                    <span class="c1"># 학습 Agent 턴</span>
+                    <span class="k">if</span> <span class="n">turn</span> <span class="o">&lt;</span> <span class="n">turns_until_tau0</span><span class="p">:</span>
+                        <span class="n">move</span><span class="p">,</span> <span class="n">pi</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">include_pi</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">move</span><span class="p">,</span> <span class="n">pi</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">include_pi</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># two step search 또는 stockfish 턴</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">move</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                        <span class="n">pi</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                        <span class="kn">import</span> <span class="nn">traceback</span><span class="p">;</span> <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                        <span class="c1"># 매우 간헐적으로 stockfish가 문제가 생기는 경우가 있음</span>
+                        <span class="c1"># 이때는 전체 학습이 중단되는것을 막기 위해 stockfish의 수를 무작위로 결정함 </span>
+                        <span class="n">move</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">))</span>
+                        <span class="n">pi</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="n">remaining_time</span><span class="p">[</span><span class="n">turn</span> <span class="o">%</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">elapsed_time</span>
+                <span class="n">legal_moves</span> <span class="o">=</span> <span class="p">[</span><span class="n">encode_move</span><span class="p">(</span><span class="n">lm</span><span class="p">,</span> <span class="n">agent</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="n">mirror</span><span class="p">)</span> <span class="k">for</span> <span class="n">lm</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">]</span>
+                <span class="n">next_state</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">move</span><span class="p">)</span>
+                <span class="c1"># 실수로 된 보상을 [0, 0.5, 1] 로 반올림 </span>
+                <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.5</span> <span class="k">else</span> <span class="nb">round</span><span class="p">(</span><span class="n">reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="n">reward</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">reward</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.5</span> <span class="k">else</span> <span class="nb">round</span><span class="p">(</span><span class="n">reward</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="p">]</span>
+
+                <span class="n">sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">encode_observation</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">fen</span><span class="p">(),</span> <span class="n">agent</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="n">mirror</span><span class="p">),</span>
+                                <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">turn</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">turn</span><span class="p">)]</span> <span class="o">+</span> <span class="n">is_castling</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">agent</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="n">mirror</span><span class="p">),</span>
+                                <span class="n">encode_move</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">agent</span><span class="o">.</span><span class="n">turn</span><span class="p">,</span> <span class="n">mirror</span><span class="p">),</span> <span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">legal_moves</span><span class="p">)</span>
+                <span class="n">short_term_memory</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+                <span class="n">state</span> <span class="o">=</span> <span class="n">next_state</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">short_term_memory</span><span class="p">):</span>
+                <span class="n">_reward</span> <span class="o">=</span> <span class="n">reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">reward</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">_reward</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">_reward</span> <span class="o">-</span> <span class="mf">1.</span>
+                <span class="n">short_term_memory</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">_reward</span>
+
+            <span class="k">if</span> <span class="n">reverse_reward</span><span class="p">:</span>
+                <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="n">reward</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+            <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="p">[</span><span class="n">agent</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">]</span>
+            <span class="n">outqueue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">reward</span><span class="p">,</span> <span class="n">turn</span><span class="p">,</span> <span class="n">short_term_memory</span><span class="p">))</span>
+
+        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="train"><a class="viewcode-back" href="../../../agents.self_learning.html#agents.self_learning.agent.train">[문서]</a><span class="k">def</span> <span class="nf">train</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    모델 학습 함수</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">()</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="c1"># model 초기화</span>
+    <span class="n">arch</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">arch</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">arch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;can&#39;t find proper NN class (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">arch</span><span class="p">))</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># n_best 개의 best 모델과 current 모델 생성, 가중치는 무작위로 생성</span>
+    <span class="n">best_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">arch</span><span class="p">(</span><span class="n">OBSERVATION_SHAPE</span><span class="p">,</span> <span class="n">LEN_STATE</span><span class="p">,</span> <span class="n">N_ACTIONS</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_bests</span><span class="p">)]</span>
+    <span class="n">current_model</span> <span class="o">=</span> <span class="n">arch</span><span class="p">(</span><span class="n">OBSERVATION_SHAPE</span><span class="p">,</span> <span class="n">LEN_STATE</span><span class="p">,</span> <span class="n">N_ACTIONS</span><span class="p">)</span>
+    <span class="c1"># 마지막 best 모델을 model 디스크에 저장하고, current 모델의 가중치를 이것으로 갱신</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">best_models</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/best.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">))</span>
+    <span class="n">current_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">best_models</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+
+    <span class="c1"># optimizer 초기화</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">current_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span>
+                          <span class="n">momentum</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">l2_penalty</span><span class="p">)</span>
+    <span class="c1"># 반복횟수 100, 200, 300, 400, 500 때마다, 학습률을 0.5씩 감쇠함</span>
+    <span class="n">milestones</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">500</span><span class="p">]</span>
+    <span class="n">lr_degration</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+    <span class="c1"># visdom 초기화, 반드시 필요</span>
+    <span class="kn">from</span> <span class="nn">visdom</span> <span class="k">import</span> <span class="n">Visdom</span>
+    <span class="n">viz</span> <span class="o">=</span> <span class="n">Visdom</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+    <span class="n">viz</span><span class="o">.</span><span class="n">cmd_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;&lt;br&gt;&#39;</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;:cmd&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">910</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">100</span><span class="p">))</span>
+    <span class="n">startup_sec</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">viz</span><span class="o">.</span><span class="n">check_connection</span><span class="p">()</span> <span class="ow">and</span> <span class="n">startup_sec</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">startup_sec</span> <span class="o">-=</span> <span class="mf">0.1</span>
+    <span class="k">assert</span> <span class="n">viz</span><span class="o">.</span><span class="n">check_connection</span><span class="p">(),</span> <span class="s1">&#39;No connection could be formed quickly&#39;</span>
+
+
+    <span class="k">def</span> <span class="nf">type_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        visdom widget, 텍스트 입력창</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">global</span> <span class="n">CMD_BUFFER</span><span class="p">,</span> <span class="n">CMD_QUEUE</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;KeyPress&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Enter&#39;</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;command pending: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">CMD_BUFFER</span><span class="p">))</span>
+                <span class="n">CMD_QUEUE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMD_BUFFER</span><span class="p">)</span>
+                <span class="n">CMD_BUFFER</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Backspace&#39;</span><span class="p">:</span>
+                <span class="n">CMD_BUFFER</span> <span class="o">=</span> <span class="n">CMD_BUFFER</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Delete&#39;</span><span class="p">:</span>
+                <span class="n">CMD_QUEUE</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="n">CMD_BUFFER</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">CMD_BUFFER</span> <span class="o">+=</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="s1">&#39;&lt;br&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CMD_QUEUE</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&lt;br&gt;&#39;</span> <span class="o">+</span> <span class="n">CMD_BUFFER</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">cmd_win</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># visdom 1.7.0 버전은 지원 안됨</span>
+        <span class="n">viz</span><span class="o">.</span><span class="n">register_event_handler</span><span class="p">(</span><span class="n">type_callback</span><span class="p">,</span> <span class="n">viz</span><span class="o">.</span><span class="n">cmd_win</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># 그 외 초기화</span>
+    <span class="n">record</span> <span class="o">=</span> <span class="n">Record</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">memory</span> <span class="o">=</span> <span class="n">ReplayMemory</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">max_memory_size</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">memory_path</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Memory path: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">memory_path</span><span class="p">))</span>
+    <span class="n">buff</span> <span class="o">=</span> <span class="n">Buffer</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c1"># worker process 초기화</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">inqueue</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="n">outqueue</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="n">workers</span> <span class="o">=</span> <span class="p">[</span><span class="n">mp</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">play_game</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">inqueue</span><span class="p">,</span> <span class="n">outqueue</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span> <span class="o">+</span> <span class="n">rank</span><span class="p">),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_workers</span><span class="p">)]</span>
+    <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">workers</span><span class="p">]</span>
+
+    <span class="c1"># 테스트 세팅</span>
+    <span class="c1"># Level 0: Two Step Search AI, Level 1~20: Stockfish</span>
+    <span class="n">opponent_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">opponents</span> <span class="o">=</span> <span class="p">[(</span><span class="n">TwoStepSearchAgent</span><span class="p">,</span> <span class="s1">&#39;two_step_search&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">21</span><span class="p">):</span>
+        <span class="n">opponents</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">Stockfish</span><span class="p">,</span> <span class="s1">&#39;stockfish_lvl_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">),</span> <span class="n">level</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_iter</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+            <span class="c1"># 현재 실험 조건창 갱신</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">args_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;&lt;p&gt;</span><span class="si">{}</span><span class="s1">&lt;/p&gt;&lt;p&gt;</span><span class="si">{}</span><span class="s1">&lt;/p&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">)),</span>
+                                    <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">args_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;args_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;: args&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">910</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">200</span><span class="p">))</span>
+            <span class="c1"># 가능하다면, 명령창 갱신</span>
+            <span class="n">viz</span><span class="o">.</span><span class="n">cmd_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;&lt;br&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CMD_QUEUE</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&lt;br&gt;&#39;</span> <span class="o">+</span> <span class="n">CMD_BUFFER</span><span class="p">,</span>
+                                   <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">cmd_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;cmd_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;: cmd&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">910</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">100</span><span class="p">))</span>
+
+            <span class="c1"># Self Learning 시작 </span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start </span><span class="si">{}</span><span class="s1"> iteration&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">iteration</span><span class="p">))</span>
+            <span class="n">loop_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start selfplay&#39;</span><span class="p">)</span>
+
+            <span class="c1"># best 모델을 평가모드로 바꾸고, cpu의 공유메모리에 복사</span>
+            <span class="k">for</span> <span class="n">best_model</span> <span class="ow">in</span> <span class="n">best_models</span><span class="p">:</span>
+                <span class="n">best_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                <span class="n">best_model</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">share_memory</span><span class="p">()</span>
+
+            <span class="n">stime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="c1"># best 모멜을 무작위로 선택하여 서로 n_selfplay 만큼 게임을 함</span>
+            <span class="k">for</span> <span class="n">_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_selfplay</span><span class="p">):</span>
+                <span class="n">white</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;White&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">WHITE</span><span class="p">)</span>
+                <span class="n">white</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">best_models</span><span class="p">),</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                 <span class="n">args</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                <span class="n">black</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Black&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">BLACK</span><span class="p">)</span>
+                <span class="n">black</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">best_models</span><span class="p">),</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                 <span class="n">args</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                <span class="n">inqueue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">white</span><span class="p">,</span> <span class="n">black</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">tau</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_turn</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+            <span class="c1"># best 모델들 간의 플레이 데이터를 replay memory에 저장함</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_selfplay</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Selfplay&#39;</span><span class="p">):</span>
+                <span class="n">score</span><span class="p">,</span> <span class="n">turn</span><span class="p">,</span> <span class="n">episode</span> <span class="o">=</span> <span class="n">outqueue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="n">memory</span><span class="o">.</span><span class="n">add_samples</span><span class="p">(</span><span class="n">episode</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Selfplay: </span><span class="si">{}</span><span class="s1"> games, </span><span class="si">{}</span><span class="s1"> sec.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_selfplay</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">stime</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Replay memory: </span><span class="si">{:.3f}</span><span class="s1"> filled </span><span class="si">{}</span><span class="s1"> / </span><span class="si">{}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">memory</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="n">args</span><span class="o">.</span><span class="n">max_memory_size</span><span class="p">,</span> <span class="n">memory</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_memory_size</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">memory</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="n">args</span><span class="o">.</span><span class="n">min_memory_size</span><span class="p">:</span>
+                <span class="c1"># replay memory에 충분히 학습 데이터가 모이면 학습을 시작함</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">xs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">iteration</span><span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start training&#39;</span><span class="p">)</span>
+                <span class="c1"># current 모델을 학습모드로 바꿈</span>
+                <span class="n">current_model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">cuda</span><span class="p">:</span>
+                    <span class="n">current_model</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+                <span class="n">train_policy_losses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="n">train_value_losses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="n">validation_policy_losses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="n">validation_value_losses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                
+                <span class="c1"># 미니배치 생성: replay memory에서 학습 데이터와 검증 데이터를 가져옴</span>
+                <span class="n">train_set</span><span class="p">,</span> <span class="n">validation_set</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">n_batches</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_batches</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+
+                <span class="c1"># 학습 알고리즘의 학습률과 모멘텀 갱신</span>
+                <span class="k">for</span> <span class="n">param_group</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">learning_rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_group</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">])</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">momentums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_group</span><span class="p">[</span><span class="s1">&#39;momentum&#39;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">batch_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+
+                <span class="c1"># n_train 번 학습 수행</span>
+                <span class="n">ob</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">lm</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">done</span> <span class="o">=</span> <span class="n">train_set</span>
+                <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_train</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Training&#39;</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_batches</span><span class="p">):</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">observations</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">ob</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">states</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">moves</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">lm</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">pi_prob</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">pi</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">values</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">dones</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">done</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+                        <span class="n">_ob</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">observations</span><span class="p">)</span>
+                        <span class="n">_s</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">states</span><span class="p">)</span>
+                        <span class="n">_m</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">moves</span><span class="p">)</span>
+                        <span class="n">_lm</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">)</span>
+                        <span class="n">_pi</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">pi_prob</span><span class="p">)</span>
+                        <span class="n">_z</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+                        <span class="n">_logits</span><span class="p">,</span> <span class="n">_value_pred</span> <span class="o">=</span> <span class="n">current_model</span><span class="p">(</span><span class="n">_ob</span><span class="p">,</span> <span class="n">_s</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mask_legal_moves</span><span class="p">:</span>
+                            <span class="c1"># 실제 가능한 수에 마스킹을 함</span>
+                            <span class="c1"># : 실제로 가능한 수를 제외한 나머지 값은 학습할 필요가 없으므로 0으로 만듬</span>
+                            <span class="n">_logits</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">_lm</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">_lm</span> <span class="o">*</span> <span class="n">_logits</span><span class="p">)</span>
+
+                        <span class="c1"># 신경망 가중치 갱신</span>
+                        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                        <span class="n">_log_prob</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">policy_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">_pi</span> <span class="o">*</span> <span class="n">_log_prob</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                        <span class="n">value_loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">_z</span> <span class="o">-</span> <span class="n">_value_pred</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                        <span class="n">loss</span> <span class="o">=</span> <span class="n">policy_loss</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">value_loss_coef</span> <span class="o">*</span> <span class="n">value_loss</span>
+                        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                        <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm</span><span class="p">(</span><span class="n">current_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">max_grad_norm</span><span class="p">)</span>
+                        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+                        <span class="n">train_policy_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">policy_loss</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="n">train_value_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value_loss</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+                <span class="c1"># 학습데이터와 별도로 검증데이터를 이용해 오차를 계산함</span>
+                <span class="n">ob</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">lm</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">done</span> <span class="o">=</span> <span class="n">validation_set</span>
+                <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_batches</span><span class="p">):</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">observations</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">ob</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">states</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">moves</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">lm</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">pi_prob</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">pi</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">values</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">buff</span><span class="o">.</span><span class="n">dones</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">done</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">ib</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+                    <span class="n">_ob</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">observations</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">_s</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">_m</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">moves</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">_lm</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">legal_moves</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">_pi</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">pi_prob</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">_z</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">buff</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">volatile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                    <span class="n">_logits</span><span class="p">,</span> <span class="n">_value_pred</span> <span class="o">=</span> <span class="n">current_model</span><span class="p">(</span><span class="n">_ob</span><span class="p">,</span> <span class="n">_s</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mask_legal_moves</span><span class="p">:</span>
+                        <span class="n">_logits</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">_lm</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">_lm</span> <span class="o">*</span> <span class="n">_logits</span><span class="p">)</span>  <span class="c1"># mask legal moves</span>
+
+                    <span class="k">if</span> <span class="n">ib</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">_prob</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">_lm</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">_lm</span> <span class="o">*</span> <span class="n">_logits</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">policy_outs</span><span class="p">[</span><span class="mi">0</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">_prob</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+                        <span class="n">buff</span><span class="o">.</span><span class="n">policy_outs</span><span class="p">[</span><span class="mi">1</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">_pi</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+
+                    <span class="n">_log_prob</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">policy_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">_pi</span> <span class="o">*</span> <span class="n">_log_prob</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                    <span class="n">value_loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">_z</span> <span class="o">-</span> <span class="n">_value_pred</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                    <span class="n">validation_policy_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">policy_loss</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">validation_value_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value_loss</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+                <span class="n">record</span><span class="o">.</span><span class="n">train_policy_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">train_policy_losses</span><span class="p">))</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">train_value_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">train_value_losses</span><span class="p">))</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">validation_policy_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">validation_policy_losses</span><span class="p">))</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">validation_value_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">validation_value_losses</span><span class="p">))</span>
+                <span class="n">total_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">validation_policy_losses</span><span class="p">)</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">value_loss_coef</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">validation_value_losses</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Train      &gt;&gt; P-loss: </span><span class="si">{:.6f}</span><span class="s1"> V-loss: </span><span class="si">{:.6f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">train_policy_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">record</span><span class="o">.</span><span class="n">train_value_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Validation &gt;&gt; P-loss: </span><span class="si">{:.6f}</span><span class="s1"> V-loss: </span><span class="si">{:.6f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">validation_policy_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">record</span><span class="o">.</span><span class="n">validation_value_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+                <span class="c1"># MCTS의 출력과 신경망 Policy 예측의 비교</span>
+                <span class="n">viz</span><span class="o">.</span><span class="n">policy_out_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">images</span><span class="p">(</span>
+                    <span class="n">tensor</span><span class="o">=</span><span class="n">buff</span><span class="o">.</span><span class="n">policy_outs</span><span class="p">,</span>
+                    <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">policy_out_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;policy_out_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">nrow</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;: probs and pi&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">910</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+                <span class="c1"># Policy Net의 학습오차와 검증오차를 표시</span>
+                <span class="n">viz</span><span class="o">.</span><span class="n">policy_loss_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                    <span class="n">X</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">record</span><span class="o">.</span><span class="n">xs</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">xs</span><span class="p">]),</span>
+                    <span class="n">Y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">record</span><span class="o">.</span><span class="n">train_policy_losses</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">validation_policy_losses</span><span class="p">]),</span>
+                    <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">policy_loss_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;policy_loss_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;&lt;br&gt;policy-loss: </span><span class="si">{:6f}</span><span class="s1"> / </span><span class="si">{:6f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">record</span><span class="o">.</span><span class="n">train_policy_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">record</span><span class="o">.</span><span class="n">validation_policy_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">width</span><span class="o">=</span><span class="mi">450</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+                <span class="c1"># Value Net의 학습오차와 검증오차를 표시</span>
+                <span class="n">viz</span><span class="o">.</span><span class="n">value_loss_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                    <span class="n">X</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">record</span><span class="o">.</span><span class="n">xs</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">xs</span><span class="p">]),</span>
+                    <span class="n">Y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">record</span><span class="o">.</span><span class="n">train_value_losses</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">validation_value_losses</span><span class="p">]),</span>
+                    <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">value_loss_win</span>  <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;value_loss_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;&lt;br&gt;value-loss: </span><span class="si">{:6f}</span><span class="s1"> / </span><span class="si">{:6f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">record</span><span class="o">.</span><span class="n">train_value_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">record</span><span class="o">.</span><span class="n">validation_value_losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">width</span><span class="o">=</span><span class="mi">450</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+                <span class="c1"># 학습률 변화를 표시</span>
+                <span class="n">viz</span><span class="o">.</span><span class="n">learning_rate_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                    <span class="n">X</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">xs</span><span class="p">),</span> <span class="n">Y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">learning_rates</span><span class="p">),</span>
+                    <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">learning_rate_win</span>  <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;learning_rate_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;&lt;br&gt;learning-rate: </span><span class="si">{:6f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">record</span><span class="o">.</span><span class="n">learning_rates</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">width</span><span class="o">=</span><span class="mi">450</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">iteration</span> <span class="o">%</span> <span class="n">args</span><span class="o">.</span><span class="n">eval_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># 현재 학습한 모델 성능 평가</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start evaluation&#39;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Eval: Current vs. Best&#39;</span><span class="p">)</span>
+                    <span class="c1"># best 모델들과 current 모델을 평가모드로 바꾸고, 공유 메모리에 복사</span>
+                    <span class="k">for</span> <span class="n">best_model</span> <span class="ow">in</span> <span class="n">best_models</span><span class="p">:</span>
+                        <span class="n">best_model</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">share_memory</span><span class="p">()</span>
+                        <span class="n">best_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                    <span class="n">current_model</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">share_memory</span><span class="p">()</span>
+                    <span class="n">current_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+                    <span class="c1"># current 모델과 무작위로 선택된 best 모델로 게임을 진행</span>
+                    <span class="n">stime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_eval</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">_id</span> <span class="o">&lt;</span> <span class="n">args</span><span class="o">.</span><span class="n">n_eval</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="n">white_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">WHITE</span><span class="p">)</span>
+                            <span class="n">white_agent</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+                                <span class="n">current_model</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                            <span class="n">black_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Best&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">BLACK</span><span class="p">)</span>
+                            <span class="n">black_agent</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+                                <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">best_models</span><span class="p">),</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                            <span class="n">reversed_reward</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">white_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Best&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">WHITE</span><span class="p">)</span>
+                            <span class="n">white_agent</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+                                <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">best_models</span><span class="p">),</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                            <span class="n">black_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">BLACK</span><span class="p">)</span>
+                            <span class="n">black_agent</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+                                <span class="n">current_model</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                            <span class="n">reversed_reward</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">inqueue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">white_agent</span><span class="p">,</span> <span class="n">black_agent</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_turn</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">,</span> <span class="n">reversed_reward</span><span class="p">))</span>  <span class="c1"># tau=0</span>
+
+                    <span class="n">scores</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_eval</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Eval: Best&#39;</span><span class="p">):</span>
+                        <span class="n">score</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">outqueue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                        <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Eval: </span><span class="si">{}</span><span class="s1"> games, </span><span class="si">{}</span><span class="s1"> sec.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_eval</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">stime</span><span class="p">))</span>
+
+                    <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+                    <span class="n">mean_score</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Mean score: Current: </span><span class="si">{}</span><span class="s1">, Best: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mean_score</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">eval_scores</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">record</span><span class="o">.</span><span class="n">iteration</span><span class="p">,</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+                    <span class="c1"># current 모델 저장</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">current_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/current.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">))</span>
+                    <span class="c1"># current 모델과 best 모델을 비교</span>
+                    <span class="k">if</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="n">pvalue</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">ttest_rel</span><span class="p">(</span><span class="n">scores</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">scores</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">pvalue</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;p-value: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pvalue</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="n">pvalue</span> <span class="o">&lt;</span> <span class="n">args</span><span class="o">.</span><span class="n">p_value</span><span class="p">:</span>
+                            <span class="c1"># current 모델의 성적이 best 모델들의 성적보다 좋고, 그것이 통계적으로 유의미하다면</span>
+                            <span class="c1"># 가장 오래된 best 모델을 하나 제거하고, current 모델을 best 모델에 복사함</span>
+                            <span class="k">for</span> <span class="n">bm_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_bests</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                                <span class="n">best_models</span><span class="p">[</span><span class="n">bm_idx</span><span class="p">]</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">best_models</span><span class="p">[</span><span class="n">bm_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+                            <span class="n">best_models</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">current_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+                            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/best.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">),</span>
+                                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/best-</span><span class="si">{}</span><span class="s1">.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">best_model_version</span><span class="p">))</span>
+                            <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">best_models</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/best.pt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">))</span>
+                            <span class="n">record</span><span class="o">.</span><span class="n">best_model_version</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;New best model: v.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">best_model_version</span><span class="p">))</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">best_model_versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">record</span><span class="o">.</span><span class="n">iteration</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">best_model_version</span><span class="p">))</span>
+
+                    <span class="c1"># Two Step Search AI와 Stockfish를 대상으로 성능평가</span>
+                    <span class="c1"># current 모델이 상대방을 이길 때마다 상대방의 level을 높이며 성능을 평가함</span>
+                    <span class="n">opponent_cls</span><span class="p">,</span> <span class="n">opponent_name</span><span class="p">,</span> <span class="n">opponent_level</span> <span class="o">=</span> <span class="n">opponents</span><span class="p">[</span><span class="n">opponent_idx</span><span class="p">]</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Eval: Current vs. </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opponent_name</span><span class="p">))</span>
+                    <span class="n">current_model</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">share_memory</span><span class="p">()</span>
+                    <span class="n">current_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+                    <span class="n">stime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_eval</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">_id</span> <span class="o">&lt;</span> <span class="n">args</span><span class="o">.</span><span class="n">n_eval</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="n">white_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">WHITE</span><span class="p">)</span>
+                            <span class="n">white_agent</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+                                <span class="n">current_model</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                            <span class="n">black_agent</span> <span class="o">=</span> <span class="n">opponent_cls</span><span class="p">(</span><span class="n">opponent_name</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">BLACK</span><span class="p">)</span>
+                            <span class="n">black_agent</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">opponent_level</span>
+                            <span class="n">reversed_reward</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">white_agent</span> <span class="o">=</span> <span class="n">opponent_cls</span><span class="p">(</span><span class="n">opponent_name</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">WHITE</span><span class="p">)</span>
+                            <span class="n">white_agent</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">opponent_level</span>
+                            <span class="n">black_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="n">chess</span><span class="o">.</span><span class="n">BLACK</span><span class="p">)</span>
+                            <span class="n">black_agent</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+                                <span class="n">current_model</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">cputc</span><span class="p">,</span>
+                                <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">)</span>
+                            <span class="n">reversed_reward</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">inqueue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">white_agent</span><span class="p">,</span> <span class="n">black_agent</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">max_turn</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mirror</span><span class="p">,</span> <span class="n">reversed_reward</span><span class="p">))</span>  <span class="c1"># tau=0</span>
+
+                    <span class="n">scores</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_eval</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Eval: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opponent_name</span><span class="p">)):</span>
+                        <span class="n">score</span><span class="p">,</span> <span class="n">turn</span><span class="p">,</span> <span class="n">episode</span> <span class="o">=</span> <span class="n">outqueue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                        <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Eval: </span><span class="si">{}</span><span class="s1"> games, </span><span class="si">{}</span><span class="s1"> sec.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_eval</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">stime</span><span class="p">))</span>
+
+                    <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+                    <span class="n">mean_score</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Mean score: Current: </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mean_score</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">opponent_name</span><span class="p">,</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">opponent_level</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">record</span><span class="o">.</span><span class="n">iteration</span><span class="p">,</span> <span class="n">opponent_idx</span><span class="p">))</span>
+
+                    <span class="c1"># current 모델이 좋은 성능을 보이면, 상대방의 level을 높이고,</span>
+                    <span class="c1"># 낮은 성능을 보이면 상대방의 level을 낮춤</span>
+                    <span class="k">if</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.55</span><span class="p">:</span>
+                        <span class="n">next_opponent_idx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">opponents</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">opponent_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Change opponent: </span><span class="si">{}</span><span class="s1"> --&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">opponents</span><span class="p">[</span><span class="n">opponent_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">opponents</span><span class="p">[</span><span class="n">next_opponent_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+                        <span class="n">opponent_idx</span> <span class="o">=</span> <span class="n">next_opponent_idx</span>
+                    <span class="k">elif</span> <span class="n">mean_score</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.45</span><span class="p">:</span>
+                        <span class="n">next_opponent_idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">opponent_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Change opponent: </span><span class="si">{}</span><span class="s1"> --&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">opponents</span><span class="p">[</span><span class="n">opponent_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">opponents</span><span class="p">[</span><span class="n">next_opponent_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+                        <span class="n">opponent_idx</span> <span class="o">=</span> <span class="n">next_opponent_idx</span>
+
+                    <span class="c1"># best model이 갱신된 횟수 갱신</span>
+                    <span class="n">xs</span><span class="p">,</span> <span class="n">best_model_versions</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">record</span><span class="o">.</span><span class="n">best_model_versions</span><span class="p">)</span>
+                    <span class="n">viz</span><span class="o">.</span><span class="n">version_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                        <span class="n">X</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">Y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">best_model_versions</span><span class="p">),</span>
+                        <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">version_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;version_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;: version: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">best_model_versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                                  <span class="n">width</span><span class="o">=</span><span class="mi">450</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+                    <span class="c1"># current vs. bset 에서 current 모델의 승률</span>
+                    <span class="n">xs</span><span class="p">,</span> <span class="n">scores</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">record</span><span class="o">.</span><span class="n">eval_scores</span><span class="p">)</span>
+                    <span class="n">viz</span><span class="o">.</span><span class="n">score_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                        <span class="n">X</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">Y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span>
+                        <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">score_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;score_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;: score: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">eval_scores</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                                  <span class="n">width</span><span class="o">=</span><span class="mi">450</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+                    <span class="c1"># 상대방 level 표시</span>
+                    <span class="n">xs</span><span class="p">,</span> <span class="n">opponent_levels</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">record</span><span class="o">.</span><span class="n">opponent_level</span><span class="p">)</span>
+                    <span class="n">viz</span><span class="o">.</span><span class="n">opponent_level_win</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                        <span class="n">X</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">Y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">opponent_levels</span><span class="p">),</span>
+                        <span class="n">win</span><span class="o">=</span><span class="n">viz</span><span class="o">.</span><span class="n">opponent_level_win</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">viz</span><span class="p">,</span> <span class="s1">&#39;opponent_level_win&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">date</span><span class="o">+</span><span class="s1">&#39;: opponent level: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">opponent_level</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                                  <span class="n">width</span><span class="o">=</span><span class="mi">450</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">))</span>
+                    <span class="c1"># 가능하다면 gnuplot으로 console 창에 상대방 level 표시</span>
+                    <span class="n">ascii_plot</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">opponent_levels</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;opponent_levels&#39;</span><span class="p">,</span> <span class="n">print_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="c1"># learning rate 갱신</span>
+                <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">iteration</span> <span class="ow">in</span> <span class="n">milestones</span><span class="p">:</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">lr_degration</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">learning_rate</span>
+
+                <span class="k">for</span> <span class="n">param_group</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">:</span>
+                    <span class="n">param_group</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">learning_rate</span>
+                    <span class="n">param_group</span><span class="p">[</span><span class="s1">&#39;momentum&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">momentum</span>
+
+                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">!=</span> <span class="n">buff</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
+                    <span class="n">buff</span> <span class="o">=</span> <span class="n">Buffer</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+                <span class="n">record</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">wall_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">record</span><span class="o">.</span><span class="n">main_start_time</span><span class="p">))</span>
+
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loop: </span><span class="si">{:.1f}</span><span class="s1"> sec. elapsed&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">loop_start_time</span><span class="p">))</span>
+
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">CMD_QUEUE</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="n">CMD_QUEUE</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">cmd</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">Operators</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+                    <span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Operators</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
+
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">args</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">current_model</span><span class="p">,</span> <span class="n">best_models</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">current_model</span><span class="p">,</span> <span class="n">best_models</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;command execution failure: </span><span class="si">{}</span><span class="s1"> -&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">exc</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Worng command: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">worker</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span> <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">workers</span><span class="p">]</span>
+        <span class="n">inqueue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">outqueue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="n">train</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>빠른 검색</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="바로 가기" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>탐색</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="전체 색인"
+             >색인</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python 모듈 목록"
+             >모듈</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Microchess AI Competition 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >모듈 코드</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../agents.html" >agents</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, NCSOFT, Game AI Lab, Game AI Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>
