@@ -132,4 +132,4 @@ AI와 게임 플레이
 일반 AI대신 human (agents.basic.human.Player)을 인자로 주면, 게임을 직접 플레이 할 수 있는 인터페이스 :ref:`play_interface` 가 활성화 된다.
 
 
-reference by 2018 NC Soft fellowship(Chess AI Compeitition)
+**reference by 2018 NC Soft fellowship(Chess AI Compeitition)**
