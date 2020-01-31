@@ -2,7 +2,6 @@
 Chess AI Compeitition Platform
 ===============================
 
-- 이 플랫폼은 Microchess를 플레이하는 AI 개발 경진대회에 사용하기 위한 목적으로 개발되었다.
 - 이 플랫폼은 크게 Microchss 게임과 예제 AI들 그리고 실행 스크립트로 구성되어 있으며, Windows 10 환경에서 python 3.5 (anaconda)를 사용하여 개발 테스트 되어있다.
 - 플랫폼이 python 으로 구현되어 있기 때문에 python 으로 AI를 구현하는 것이 권장되지만, 다른 언어로 구현한 AI를 사용할 수 도 있다.
 
