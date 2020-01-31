@@ -236,7 +236,7 @@ MCTSAgentDev가 작동하기 전에 visdom server를 실행시켜두면 :ref:`mc
 
 
 .. _mcts_visualization:
-.. figure:: figs/mcts_visualization.png
+.. figure:: figs/mcts_visualization.PNG
    :figwidth: 600
 
    MCTS 의사결정과정
