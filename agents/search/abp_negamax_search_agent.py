@@ -32,7 +32,7 @@ class ABPNegamaxSearchAgent(BaseAgent):
         start_time = time.perf_counter()
         self.n_nodes = 0
         color = 1. if self.turn else -1.
-        # 초기 alpha 값은 -무한대, beta 값은 +무산대로 설정함
+        # 초기 alpha 값은 -무한대, beta 값은 +무한대로 설정함
         alpha = -1000  # 내 순서에서 찾아낸 최대 보상
         beta = 1000  # 상대방의 순서에서 찾아낸 최소 보상
         best_move, best_value = self.negamax(state, self.max_depth, alpha, beta, color)
