@@ -39,7 +39,7 @@ else:
     import subprocess
 
 
-FUTURE_POLL_TIMEOUT = 0.1 if platform.system() == "Windows" else 60
+FUTURE_POLL_TIMEOUT = 0.1 if platform.system() == "Windows" else 60 #재시작 타임 아웃
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class EngineStateException(Exception):
 class Option(collections.namedtuple("Option", "name type default min max var")):
     """Information about an available option for an UCI engine."""
 
-    __slots__ = ()
+    __slots__ = () #__slot__ : explicitly declare data members and deny the creation of __dict__ and __weakref__
 
 
 class MockProcess(object):
@@ -71,7 +71,7 @@ class MockProcess(object):
 
         self._send_queue = queue.Queue()
         self._send_thread = threading.Thread(target=self._send_thread_target)
-        self._send_thread.daemon = True
+        self._send_thread.daemon = True #thread가 daemon인지 아닌지 확인 - 백그라운드에서 실행되는 쓰레드 (메인이 종료되면 즉시 종료)
         self._send_thread.start()
 
     def _send_thread_target(self):
